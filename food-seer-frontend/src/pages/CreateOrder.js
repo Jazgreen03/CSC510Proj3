@@ -128,7 +128,21 @@ const CreateOrder = () => {
       console.log('Sending order data:', orderData); // Debug log
       await createOrder(orderData);
       alert('Order placed successfully!');
-      navigate('/orders');
+
+     // UPDATE FRONTEND STOCK AFTER ORDER IS PLACED
+    setFoods(prevFoods =>
+      prevFoods.map(f => {
+        // Count how many of this food were ordered
+        const quantityOrdered = orderFoods.filter(of => of.id === f.id).length;
+        return { ...f, amount: f.amount - quantityOrdered };
+      })
+    );
+
+    // Clear cart and order name
+    setCart({});
+    setOrderName('');
+
+      // navigate('/orders');
     } catch (error) {
       console.error('Error creating order:', error);
       alert('Failed to create order. Please try again.');
