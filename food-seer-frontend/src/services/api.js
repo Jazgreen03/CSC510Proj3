@@ -467,12 +467,33 @@ export const sendChatMessage = async (message) => {
     });
     
     if (!response.ok) {
-      throw new Error('Failed to send message to AI');
+      let errorMessage = 'Failed to send message to AI';
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        // If response is not JSON, use status text
+        errorMessage = `Failed to send message: ${response.status} ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
     
-    return await response.json();
+    const data = await response.json();
+    
+    // Validate response structure
+    if (!data || typeof data.message !== 'string') {
+      throw new Error('Invalid response format from AI service');
+    }
+    
+    return data;
   } catch (error) {
     console.error('Chat error:', error);
+    // Re-throw with more context if it's a network error
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to the server. Please check if the backend is running.');
+    }
     throw error;
   }
 };
