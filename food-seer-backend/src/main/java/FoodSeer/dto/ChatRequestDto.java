@@ -15,5 +15,7 @@ import lombok.Setter;
 public class ChatRequestDto {
     /** The message to send to the AI */
     private String message;
+    /** Optional: whether the client prefers the response to be spoken */
+    private Boolean speak;
 }
 
