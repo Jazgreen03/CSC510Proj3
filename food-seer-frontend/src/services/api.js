@@ -586,24 +586,7 @@ export const getAnalyticsSnapshot = async (days = 30) => {
   }
 };
 
-export const scheduleReport = async (email, frequency = 'DAILY') => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/schedule`, {
-      method: 'POST',
-      headers: createHeaders(true),
-      body: JSON.stringify({ email, frequency }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to schedule report');
-    }
-
-    return await response.text();
-  } catch (error) {
-    console.error('Schedule report error:', error);
-    throw error;
-  }
-};
+// Scheduling and send-email endpoints removed from backend; frontend scheduling helpers removed.
 
 // Chat API calls
 export const sendChatMessage = async (message) => {
