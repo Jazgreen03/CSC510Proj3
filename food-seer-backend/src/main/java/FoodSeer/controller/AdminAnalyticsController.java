@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import FoodSeer.dto.AnalyticsOverviewDto;
-import FoodSeer.dto.ScheduledReportDto;
-import FoodSeer.service.ScheduledReportService;
+import FoodSeer.service.AnalyticsSnapshotService;
+// Scheduled report / email features removed
 import FoodSeer.entity.Food;
 import FoodSeer.entity.Order;
 import FoodSeer.entity.User;
@@ -42,8 +42,9 @@ public class AdminAnalyticsController {
     @Autowired
     private UserRepository userRepository;
 
+
     @Autowired
-    private ScheduledReportService scheduledReportService;
+    private AnalyticsSnapshotService snapshotService;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_DATE;
 
@@ -190,32 +191,10 @@ public class AdminAnalyticsController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/snapshot")
     public ResponseEntity<Map<String, Object>> snapshot(@RequestParam(name = "days", defaultValue = "30") final int days) {
-        final Map<String, Object> out = new LinkedHashMap<>();
-        out.put("overview", overview().getBody());
-        out.put("ordersPerDay", ordersPerDay(days).getBody());
-        out.put("topProducts", topProducts(20).getBody());
-        out.put("preferences", preferencesDistribution().getBody());
-        out.put("engagement", engagement(days).getBody());
-
-        // inventory via InventoryController/Service is available; fetch via repository through orderRepository -> use foods from inventory
-        // For simplicity, build inventory map from Food entities referenced in orders and users — but better to call InventoryService.
-        final Map<String, Long> inventoryMap = orderRepository.findAll().stream()
-                .flatMap(o -> o.getFoods().stream())
-                .collect(Collectors.groupingBy(Food::getFoodName, Collectors.summingLong(Food::getAmount)));
-        out.put("inventory", inventoryMap);
-
+        final Map<String, Object> out = snapshotService.buildSnapshot(days);
         return ResponseEntity.ok(out);
     }
 
-    /**
-     * Register a scheduled report. This is a lightweight scaffold: schedules are stored in-memory and
-     * a background task will attempt to run them and log the snapshot (requires mail config to send emails).
-     */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/schedule")
-    public ResponseEntity<String> scheduleReport(@RequestBody final ScheduledReportDto dto) {
-        scheduledReportService.register(dto);
-        return ResponseEntity.ok("Scheduled report registered");
-    }
+    // Email/send-now scheduling endpoints removed to simplify the demo (no email support).
 
 }

@@ -22,14 +22,21 @@ public class ScheduledReportService {
         logger.info("Registered scheduled report: {} {}", dto.getEmail(), dto.getFrequency());
     }
 
-    // Simple periodic runner (every minute) to simulate sending reports.
+    // Simple periodic runner (every minute) to simulate scheduled reports.
     @Scheduled(fixedRate = 60000)
     public void runScheduled() {
         if (scheduled.isEmpty()) return;
         logger.info("ScheduledReportService running at {} — {} reports registered", LocalDateTime.now(), scheduled.size());
         for (final ScheduledReportDto dto : scheduled) {
-            // In a real implementation, this would assemble the analytics snapshot and send an email attachment.
-            logger.info("Would send snapshot to {} with frequency {}", dto.getEmail(), dto.getFrequency());
+            // This service no longer sends email; it only logs that a scheduled report would have been sent.
+            logger.info("(no-email) Would generate snapshot for {} with frequency {}", dto.getEmail(), dto.getFrequency());
         }
+    }
+
+    /**
+     * Demo send-now: previously sent email. Now kept as a log-only operation to avoid email features.
+     */
+    public void sendNow(final String email) {
+        logger.info("[sendNow][no-email] Requested snapshot for {} (email feature removed)", email);
     }
 }
