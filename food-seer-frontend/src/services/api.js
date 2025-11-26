@@ -457,6 +457,154 @@ export const deleteUser = async (id) => {
   }
 };
 
+// Admin stats API call
+export const getAdminStats = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch admin stats');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get admin stats error:', error);
+    throw error;
+  }
+};
+
+// Analytics API calls
+export const getAnalyticsOverview = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/overview`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch analytics overview');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get analytics overview error:', error);
+    throw error;
+  }
+};
+
+export const getOrdersPerDay = async (days = 30) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/orders-per-day?days=${days}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch orders per day');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get orders per day error:', error);
+    throw error;
+  }
+};
+
+export const getTopProducts = async (limit = 10) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/top-products?limit=${limit}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch top products');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get top products error:', error);
+    throw error;
+  }
+};
+
+export const getPreferencesDistribution = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/preferences`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch preferences distribution');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get preferences distribution error:', error);
+    throw error;
+  }
+};
+
+export const getEngagement = async (days = 30) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/engagement?days=${days}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch engagement metrics');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get engagement error:', error);
+    throw error;
+  }
+};
+
+// Snapshot and scheduling
+export const getAnalyticsSnapshot = async (days = 30) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/snapshot?days=${days}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch analytics snapshot');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get analytics snapshot error:', error);
+    throw error;
+  }
+};
+
+export const scheduleReport = async (email, frequency = 'DAILY') => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/schedule`, {
+      method: 'POST',
+      headers: createHeaders(true),
+      body: JSON.stringify({ email, frequency }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to schedule report');
+    }
+
+    return await response.text();
+  } catch (error) {
+    console.error('Schedule report error:', error);
+    throw error;
+  }
+};
+
 // Chat API calls
 export const sendChatMessage = async (message) => {
   try {
