@@ -51,30 +51,51 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public OrderDto createOrder(final OrderDto orderDto) {
-        // Load actual Food entities from database (managed entities)
         final List<Food> foods = new ArrayList<>();
-        for (final Food food : orderDto.getFoods()) {
-            final Food f = foodRepository.findById(food.getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("A Food item does not exist within the order."));
-            foods.add(f);
+
+    // Count how many of each food is in the order
+    Map<Long, Long> foodCounts = orderDto.getFoods().stream()
+        .collect(Collectors.groupingBy(Food::getId, Collectors.counting()));
+
+    for (Map.Entry<Long, Long> entry : foodCounts.entrySet()) {
+        Long foodId = entry.getKey();
+        Long quantityNeeded = entry.getValue();
+
+        Food food = foodRepository.findById(foodId)
+                .orElseThrow(() -> new ResourceNotFoundException("Food not found with id " + foodId));
+
+        // Check if enough stock
+        if (food.getAmount() < quantityNeeded) {
+            throw new IllegalArgumentException("Not enough stock for " + food.getFoodName()
+                    + ". Needed: " + quantityNeeded + ", Available: " + food.getAmount());
         }
 
-        // Create order entity directly (not using mapper to avoid creating new Food objects)
-        final Order order = new Order();
-        order.setName(orderDto.getName());
-        order.setFoods(foods);
-        order.setIsFulfilled(false);
-        
-        // Set the current user as the owner of this order
-        final User currentUser = userService.getCurrentUser();
-        if (currentUser == null) {
-            throw new IllegalStateException("No authenticated user found");
+        // Deduct stock immediately
+        food.setAmount((int) (food.getAmount() - quantityNeeded));
+        foodRepository.save(food);
+
+        // Add the food multiple times based on quantity
+        for (int i = 0; i < quantityNeeded; i++) {
+            foods.add(food);
         }
-        order.setUser(currentUser);
-        
-        final Order savedOrder = orderRepository.save(order);
-        return OrderMapper.mapToOrderDto(savedOrder);
     }
+
+    // Create order
+    final Order order = new Order();
+    order.setName(orderDto.getName());
+    order.setFoods(foods);
+    order.setIsFulfilled(false);
+
+    // Assign user
+    final User currentUser = userService.getCurrentUser();
+    if (currentUser == null) {
+        throw new IllegalStateException("No authenticated user found");
+    }
+    order.setUser(currentUser);
+
+    final Order savedOrder = orderRepository.save(order);
+    return OrderMapper.mapToOrderDto(savedOrder);
+}
 
     /**
      * Returns the order with the given id.
