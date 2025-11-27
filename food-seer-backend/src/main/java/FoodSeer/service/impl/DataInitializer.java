@@ -16,6 +16,10 @@ import FoodSeer.entity.Food;
 import FoodSeer.repositories.UserRepository;
 import FoodSeer.repositories.RoleRepository;
 import FoodSeer.repositories.FoodRepository;
+import FoodSeer.repositories.OrderRepository;
+import FoodSeer.entity.Order;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 
 /**
  * Initializes application data such as a default admin user.
@@ -26,6 +30,7 @@ public class DataInitializer {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final FoodRepository foodRepository;
+    private final OrderRepository orderRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${app.admin-user-password:admin}")
@@ -34,10 +39,12 @@ public class DataInitializer {
     public DataInitializer(UserRepository userRepository,
                            RoleRepository roleRepository,
                            FoodRepository foodRepository,
+                           OrderRepository orderRepository,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.foodRepository = foodRepository;
+        this.orderRepository = orderRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -148,6 +155,34 @@ public class DataInitializer {
             // Save all sample foods
             foodRepository.saveAll(sampleFoods);
             System.out.println("Successfully created " + sampleFoods.size() + " sample food items with comprehensive allergen information!");
+
+            // Create some sample orders so analytics have data (assigned to admin user)
+            try {
+                final java.util.List<Food> foodsInDb = foodRepository.findAll();
+                final User adminUser = userRepository.findByUsername("admin").orElse(null);
+                if (adminUser != null && !foodsInDb.isEmpty()) {
+                    final java.util.List<Order> sampleOrders = new java.util.ArrayList<>();
+                    for (int i = 0; i < 12; i++) {
+                        final Order o = new Order();
+                        o.setName("Sample Order " + (i + 1));
+                        // pick 1-3 foods
+                        final java.util.List<Food> chosen = new java.util.ArrayList<>();
+                        chosen.add(foodsInDb.get(i % foodsInDb.size()));
+                        if (i % 3 != 0) chosen.add(foodsInDb.get((i + 1) % foodsInDb.size()));
+                        if (i % 5 == 0) chosen.add(foodsInDb.get((i + 2) % foodsInDb.size()));
+                        o.setFoods(chosen);
+                        o.setIsFulfilled(i % 2 == 0);
+                        o.setUser(adminUser);
+                        o.setCreatedAt(LocalDateTime.now().minusDays(i));
+                        sampleOrders.add(o);
+                    }
+
+                    orderRepository.saveAll(sampleOrders);
+                    System.out.println("Created " + sampleOrders.size() + " sample orders for analytics.");
+                }
+            } catch (final Exception e) {
+                System.out.println("Failed to create sample orders: " + e.getMessage());
+            }
         } else {
             System.out.println("Food database already contains " + foodRepository.count() + " items - skipping sample data creation.");
         }
