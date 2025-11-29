@@ -458,18 +458,21 @@ export const deleteUser = async (id) => {
 };
 
 // Chat API calls
-export const sendChatMessage = async (message) => {
+export const sendChatMessage = async (payload) => {
   try {
+    // payload can be a string (message) or an object { message, mode, history, userId }
+    const body = typeof payload === 'string' ? { message: payload } : payload;
+
     const response = await fetch(`${API_BASE_URL}/api/chat`, {
       method: 'POST',
       headers: createHeaders(true),
-      body: JSON.stringify({ message }),
+      body: JSON.stringify(body),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to send message to AI');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Chat error:', error);
