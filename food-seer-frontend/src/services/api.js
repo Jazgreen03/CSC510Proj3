@@ -480,3 +480,39 @@ export const sendChatMessage = async (payload) => {
   }
 };
 
+// Conversation History API calls
+export const getConversationHistory = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/chat/history/${userId}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch conversation history');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get conversation history error:', error);
+    throw error;
+  }
+};
+
+export const clearConversationHistory = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/chat/history/${userId}`, {
+      method: 'DELETE',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to clear conversation history');
+    }
+
+    return await response.text();
+  } catch (error) {
+    console.error('Clear conversation history error:', error);
+    throw error;
+  }
+};

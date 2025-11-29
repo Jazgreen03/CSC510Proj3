@@ -18,6 +18,7 @@ import FoodSeer.dto.MessageDto;
 import FoodSeer.dto.FoodDto;
 import FoodSeer.entity.User;
 import FoodSeer.service.ChatService;
+import FoodSeer.service.ConversationService;
 import FoodSeer.service.FoodService;
 import FoodSeer.service.UserService;
 import FoodSeer.service.RecommendationService;
@@ -48,6 +49,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private RecommendationService recommendationService;
+
+    @Autowired
+    private ConversationService conversationService;
     
     /**
      * Constructor for ChatServiceImpl.
@@ -212,6 +216,16 @@ public class ChatServiceImpl implements ChatService {
                 } catch (final Exception e) {
                     System.err.println("DEBUG: Error during intelligent recommendation: " + e.getMessage());
                     e.printStackTrace();
+                }
+
+                // Save messages to database for conversation history
+                if (user != null) {
+                    try {
+                        conversationService.saveMessage(user, chatRequest.getMessage(), "user");
+                        conversationService.saveMessage(user, finalResponse, "assistant");
+                    } catch (final Exception e) {
+                        System.err.println("DEBUG: Error saving conversation history: " + e.getMessage());
+                    }
                 }
 
                 return new ChatResponseDto(finalResponse, false, matchedId);
