@@ -33,6 +33,11 @@ public class FoodDto {
     private List<String> allergies = new ArrayList<>();
 
     /**
+     * List of tags for flexible filtering (e.g., VEGETARIAN, VEGAN, SPICY, MILD, CHINESE, ITALIAN, DESSERT, HOT, COLD, etc.)
+     */
+    private List<String> tags = new ArrayList<>();
+
+    /**
      * Default constructor
      */
     public FoodDto () {
@@ -136,6 +141,25 @@ public class FoodDto {
      */
     public void setAllergies ( final List<String> allergies ) {
         this.allergies = allergies;
+    }
+
+    /**
+     * Gets the tags associated with the food
+     *
+     * @return The tags list
+     */
+    public List<String> getTags () {
+        return tags;
+    }
+
+    /**
+     * Sets the tags list to @param tags
+     *
+     * @param tags
+     *            The tags to set
+     */
+    public void setTags ( final List<String> tags ) {
+        this.tags = tags;
     }
 
     /**
