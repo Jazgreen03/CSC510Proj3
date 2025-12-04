@@ -28,6 +28,9 @@ public class RecommendationFeedback {
     @Column(nullable = false)
     private LocalDateTime createdAt;
     
+    @Column
+    private String imageUrl;
+    
     private String aiModel;
     
     private String recommendationContext;
@@ -99,6 +102,14 @@ public class RecommendationFeedback {
     
     public String getRecommendationContext() {
         return recommendationContext;
+    }
+
+    public String getImageUrl() {
+    return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
     
     public void setRecommendationContext(String recommendationContext) {

@@ -45,6 +45,12 @@ const Chatbot = () => {
   });
   const [recommendedFood, setRecommendedFood] = useState(null);
   const [stateLoaded, setStateLoaded] = useState(false);
+  
+  // NEW: Rating state
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [hasRated, setHasRated] = useState(false);
+  const [ratingMessage, setRatingMessage] = useState('');
 
   // Load user and their chatbot state on mount
   useEffect(() => {
@@ -144,6 +150,42 @@ Available foods that match their budget and dietary restrictions: ${foodList}
 Please recommend exactly ONE food item from the available list that best matches their mood, hunger level, and preferences. 
 Explain in 2-3 sentences why this food is perfect for them right now. Be conversational and friendly.
 Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
+  };
+
+  // NEW: Handle star rating submission
+  const handleStarClick = async (starNumber) => {
+    if (hasRated || !recommendedFood) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('http://localhost:8080/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          recommendedFoodItem: recommendedFood.foodName,
+          rating: starNumber,
+          review: '',
+          recommendationContext: 'AI Chatbot Recommendation from Ollama'
+        })
+      });
+
+      if (response.ok) {
+        setRating(starNumber);
+        setHasRated(true);
+        setRatingMessage(`✅ Thanks for rating ${recommendedFood.foodName}!`);
+        
+        setTimeout(() => setRatingMessage(''), 3000);
+      } else {
+        setRatingMessage('❌ Failed to submit rating');
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      setRatingMessage('❌ Error submitting rating');
+    }
   };
 
   const handleSendMessage = async () => {
@@ -257,10 +299,21 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
     setUserResponses(newState.userResponses);
     setRecommendedFood(newState.recommendedFood);
     
+    // Reset rating state
+    setRating(0);
+    setHoverRating(0);
+    setHasRated(false);
+    setRatingMessage('');
+    
     // Clear user-specific chatbot state
     if (currentUserId) {
       localStorage.setItem(`chatbotState_${currentUserId}`, JSON.stringify(newState));
     }
+  };
+
+  const getStarColor = (starNumber) => {
+    const displayRating = hoverRating || rating;
+    return starNumber <= displayRating ? '#ffc107' : '#e4e5e9';
   };
 
   return (
@@ -286,6 +339,46 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
                       'No common allergens'
                     )}
                   </p>
+
+                  {/* NEW: 5-Star Rating Section */}
+                  <div className="rating-section">
+                    <div className="rating-label">
+                      {hasRated ? (
+                        <span className="rating-thank-you">
+                          ✓ Thanks for rating! ({rating}/5)
+                        </span>
+                      ) : (
+                        <span>Rate This Recommendation:</span>
+                      )}
+                    </div>
+                    
+                    <div className="stars-container">
+                      {[1, 2, 3, 4, 5].map((starNumber) => (
+                        <span
+                          key={starNumber}
+                          className={`star ${hasRated ? 'rated' : 'clickable'}`}
+                          onClick={() => handleStarClick(starNumber)}
+                          onMouseEnter={() => !hasRated && setHoverRating(starNumber)}
+                          onMouseLeave={() => !hasRated && setHoverRating(0)}
+                          style={{
+                            color: getStarColor(starNumber),
+                            cursor: hasRated ? 'default' : 'pointer',
+                            fontSize: '32px',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+
+                    {ratingMessage && (
+                      <div className={`rating-message ${ratingMessage.includes('✅') ? 'success' : 'error'}`}>
+                        {ratingMessage}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="recommendation-actions">
                     <button onClick={handleOrderFood} className="btn-primary">
                       Order This Now!
@@ -347,4 +440,3 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
 };
 
 export default Chatbot;
-

@@ -4,7 +4,8 @@ public record FeedbackRequestDto(
     String recommendedFoodItem,
     Integer rating,
     String review,
-    String recommendationContext
+    String recommendationContext,
+    String imageUrl
 ) {
     public FeedbackRequestDto {
         if (rating == null || rating < 1 || rating > 5) {

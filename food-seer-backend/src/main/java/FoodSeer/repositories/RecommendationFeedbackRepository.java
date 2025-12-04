@@ -37,6 +37,10 @@ public interface RecommendationFeedbackRepository extends JpaRepository<Recommen
     @Query("SELECT f FROM RecommendationFeedback f WHERE f.rating >= 4 ORDER BY f.createdAt DESC")
     List<RecommendationFeedback> findHighlyRatedFeedback();
     
+    // Get highest-rated foods for a user
+    @Query("SELECT f FROM RecommendationFeedback f WHERE f.user = :user ORDER BY f.rating DESC, f.createdAt DESC")
+    List<RecommendationFeedback> findTopRatedByUser(@Param("user") User user);
+
     // Get all feedback for a specific AI model
     List<RecommendationFeedback> findByAiModel(String aiModel);
 }
