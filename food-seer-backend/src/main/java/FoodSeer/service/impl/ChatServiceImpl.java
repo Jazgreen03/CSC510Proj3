@@ -135,7 +135,7 @@ public class ChatServiceImpl implements ChatService {
                         q.append("I'd love to recommend something! Just need a bit of info:");
                         if (missingBudget) q.append(" What's your budget? (budget / moderate / premium)");
                         if (missingAllergies) q.append(" Any dietary restrictions or allergies?");
-                        return new ChatResponseDto(q.toString(), true, null);
+                        return new ChatResponseDto(q.toString(), null, true, null);
                     }
                 }
             }
@@ -228,15 +228,15 @@ public class ChatServiceImpl implements ChatService {
                     }
                 }
 
-                return new ChatResponseDto(finalResponse, false, matchedId);
+                return new ChatResponseDto(finalResponse, null, false, matchedId);
             }
 
-            return new ChatResponseDto("No response from AI", false, null);
+            return new ChatResponseDto("No response from AI", null, false, null);
             
         } catch (final Exception e) {
             System.err.println("Error communicating with Ollama: " + e.getMessage());
             e.printStackTrace();
-            return new ChatResponseDto("Error: " + e.getMessage(), false, null);
+            return new ChatResponseDto("Error: " + e.getMessage(), null, false, null);
         }
     }
 }
