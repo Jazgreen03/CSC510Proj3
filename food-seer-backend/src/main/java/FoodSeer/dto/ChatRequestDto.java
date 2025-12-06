@@ -17,5 +17,14 @@ public class ChatRequestDto {
     private String message;
     /** Optional: whether the client prefers the response to be spoken */
     private Boolean speak;
+
+    /** Mode can be 'guided', 'freeform', or 'recommend' */
+    private String mode;
+
+    /** Conversation history (optional) - list of role/content pairs */
+    private java.util.List<MessageDto> history;
+
+    /** Optional user id to build personalized prompts */
+    private Long userId;
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { sendChatMessage, getCurrentUser, getAllFoods } from '../services/api';
+import { sendChatMessage, getCurrentUser, getAllFoods, getConversationHistory, clearConversationHistory } from '../services/api';
 
 const Chatbot = () => {
   const navigate = useNavigate();
@@ -45,6 +45,7 @@ const Chatbot = () => {
   // Speech API state
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef(null);
+  const [customQuestion, setCustomQuestion] = useState('');
 
   // Load user and their chatbot state on mount
   useEffect(() => {
@@ -53,14 +54,22 @@ const Chatbot = () => {
         const user = await getCurrentUser();
         setCurrentUserId(user.id);
         
-        // Load user-specific chatbot state
-        const savedState = loadState(user.id);
-        if (savedState) {
-          setMessages(savedState.messages);
-          setConversationStep(savedState.conversationStep);
-          setUserResponses(savedState.userResponses);
-          setRecommendedFood(savedState.recommendedFood);
+        // Load conversation history from database
+        try {
+          const history = await getConversationHistory(user.id);
+          if (history && history.length > 0) {
+            // Convert from ConversationDto to message format
+            const messages = history.map(msg => ({
+              role: msg.role,
+              content: msg.messageContent
+            }));
+            setMessages(messages);
+          }
+        } catch (error) {
+          console.error('Error loading conversation history:', error);
+          // If no history, start with greeting
         }
+        
         setStateLoaded(true);
       } catch (error) {
         console.error('Error loading user:', error);
@@ -90,6 +99,11 @@ const Chatbot = () => {
       setMessages([{
         role: 'assistant',
         content: INITIAL_GREETING
+    // Start with a simple greeting only if no messages loaded from history
+    if (messages.length === 0 && stateLoaded) {
+      setMessages([{
+        role: 'assistant',
+        content: 'Hi! I\'m your FoodSeer AI assistant. Ask me anything about our menu or food recommendations!'
       }]);
       
       // Generate and add the first dynamic question
@@ -266,18 +280,18 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
     setIsLoading(true);
 
     try {
-      // Store user responses
-      const responses = { ...userResponses };
-      if (conversationStep === 0) responses.mood = inputMessage;
-      if (conversationStep === 1) responses.hunger = inputMessage;
-      if (conversationStep === 2) responses.preference = inputMessage;
-      setUserResponses(responses);
+      // If in guided mode (steps 0-2), follow the template logic
+      if (conversationStep < 3) {
+        // Store user responses for the guided flow
+        const responses = { ...userResponses };
+        if (conversationStep === 0) responses.mood = inputMessage;
+        if (conversationStep === 1) responses.hunger = inputMessage;
+        if (conversationStep === 2) responses.preference = inputMessage;
+        setUserResponses(responses);
 
-      // If we've asked all questions, get food recommendation
-      if (conversationStep === 2) {
-        // Get user data and foods for personalized recommendation
-        const userData = await getCurrentUser();
-        const foods = await getAllFoods();
+        // Move to next step or finish guided flow
+        const nextStep = conversationStep + 1;
+        setConversationStep(nextStep);
         
         const personalizedPrompt = getPersonalizedPrompt(
           responses.mood,
@@ -317,13 +331,19 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
 
         // If we found a match, show order button
         if (matchedFood) {
+        if (nextStep < 3) {
+          // Ask next question
           setMessages(prev => [...prev, {
-            role: 'system',
-            content: 'recommendation-card',
-            food: matchedFood
+            role: 'assistant',
+            content: QUESTIONS[nextStep]
+          }]);
+        } else {
+          // Guided flow complete - offer to get recommendation or continue chatting
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: "Great! I've learned about your mood, hunger level, and food preferences. Would you like me to recommend something now, or would you like to ask me anything else?"
           }]);
         }
-
       } else {
         // Generate next question based on conversation context
         const nextStep = conversationStep + 1;
@@ -353,6 +373,37 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
             role: 'assistant',
             content: fallbackQuestion
           }]);
+        // Free conversation mode - send raw user input to backend
+        const historyPayload = messages.map(m => ({ role: m.role, content: m.content }));
+        const aiResponse = await sendChatMessage({
+          message: inputMessage,
+          mode: 'auto', // Let backend decide based on content
+          history: historyPayload,
+          userId: currentUserId
+        });
+
+        const aiText = aiResponse.message || aiResponse;
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: aiText
+        }]);
+
+        // If backend detected and matched a food, show recommendation card
+        if (aiResponse.matchedFoodId) {
+          try {
+            const foods = await getAllFoods();
+            const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
+            if (matchedFood) {
+              setRecommendedFood(matchedFood);
+              setMessages(prev => [...prev, {
+                role: 'system',
+                content: 'recommendation-card',
+                food: matchedFood
+              }]);
+            }
+          } catch (e) {
+            // ignore
+          }
         }
       }
 
@@ -371,6 +422,68 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const handleSendCustomQuestion = async () => {
+    if (!customQuestion.trim()) return;
+
+    const userMessage = {
+      role: 'user',
+      content: customQuestion
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setCustomQuestion('');
+
+    try {
+      // Filter out system messages (like recommendation-card) when building history
+      const historyPayload = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({ role: m.role, content: m.content }));
+      
+      const aiResponse = await sendChatMessage({
+        message: customQuestion,
+        mode: 'freeform',
+        history: historyPayload,
+        userId: currentUserId
+      });
+
+      console.log('AI Response:', aiResponse);
+      console.log('Matched Food ID:', aiResponse.matchedFoodId);
+
+      const aiText = aiResponse.message || aiResponse;
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: aiText
+      }]);
+
+      // If backend returned matchedFoodId, fetch the food and show recommendation card
+      if (aiResponse.matchedFoodId) {
+        try {
+          const foods = await getAllFoods();
+          const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
+          if (matchedFood) {
+            setRecommendedFood(matchedFood);
+            setMessages(prev => [...prev, {
+              role: 'system',
+              content: 'recommendation-card',
+              food: matchedFood
+            }]);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (error) {
+      console.error('Error sending custom question:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error responding to your question.'
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -407,18 +520,100 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
     const newState = {
       messages: newMessages,
       conversationStep: 0,
+    setIsLoading(true);
+
+    // Clear server-side conversation history (if logged in)
+    if (currentUserId) {
+      try {
+        await clearConversationHistory(currentUserId);
+      } catch (err) {
+        console.warn('Failed to clear server conversation history:', err);
+      }
+    }
+
+    // Reset local storage and local state
+    // Use a neutral, free-form greeting when restarting so the chat doesn't force the guided flow
+    const neutralGreeting = "Hi! I'm your FoodSeer AI assistant. How can I help you today?";
+    const newState = {
+      messages: [{ role: 'assistant', content: neutralGreeting }],
+      conversationStep: 3, // put into freeform mode by default after restart
       userResponses: { mood: '', hunger: '', preference: '' },
       recommendedFood: null
     };
-    
+
     setMessages(newState.messages);
     setConversationStep(newState.conversationStep);
     setUserResponses(newState.userResponses);
     setRecommendedFood(newState.recommendedFood);
-    
-    // Clear user-specific chatbot state
+
     if (currentUserId) {
-      localStorage.setItem(`chatbotState_${currentUserId}`, JSON.stringify(newState));
+      try {
+        localStorage.removeItem(`chatbotState_${currentUserId}`);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    setIsLoading(false);
+  };
+
+  const handleGetAnotherSuggestion = async () => {
+    const userMessage = {
+      role: 'user',
+      content: 'Can you suggest something else?'
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setRecommendedFood(null);
+
+    try {
+      // Filter out system messages (like recommendation-card) when building history
+      const historyPayload = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({ role: m.role, content: m.content }));
+      
+      const aiResponse = await sendChatMessage({
+        message: 'Can you suggest something else? I would like a different recommendation.',
+        mode: 'recommend',
+        history: historyPayload,
+        userId: currentUserId
+      });
+
+      console.log('AI Response:', aiResponse);
+      console.log('Matched Food ID:', aiResponse.matchedFoodId);
+
+      const aiText = aiResponse.message || aiResponse;
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: aiText
+      }]);
+
+      // If backend returned matchedFoodId, fetch the food and show recommendation card
+      if (aiResponse.matchedFoodId) {
+        try {
+          const foods = await getAllFoods();
+          const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
+          if (matchedFood) {
+            setRecommendedFood(matchedFood);
+            setMessages(prev => [...prev, {
+              role: 'system',
+              content: 'recommendation-card',
+              food: matchedFood
+            }]);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    } catch (error) {
+      console.error('Error getting another suggestion:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Let me try again!'
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -444,9 +639,16 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
 
   return (
     <div className="chatbot-container">
-      <div className="chatbot-header">
-        <h2>🤖 FoodSeer AI Assistant</h2>
-        <p>Let me help you find the perfect meal for your day!</p>
+      <div className="chatbot-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div>
+          <h2>🤖 FoodSeer AI Assistant</h2>
+          <p>Let me help you find the perfect meal for your day!</p>
+        </div>
+        <div>
+          <button onClick={handleStartOver} className="btn-restart-chat" title="Restart conversation">
+            🔄 Restart
+          </button>
+        </div>
       </div>
 
       <div className="chatbot-messages">
@@ -467,9 +669,9 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
                   </p>
                   <div className="recommendation-actions">
                     <button onClick={handleOrderFood} className="btn-primary">
-                      Order This Now!
+                      Order Now
                     </button>
-                    <button onClick={handleStartOver} className="btn-secondary">
+                    <button onClick={handleGetAnotherSuggestion} className="btn-secondary">
                       Get Another Suggestion
                     </button>
                   </div>
@@ -498,14 +700,15 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="chatbot-input">
+      <div className="chatbot-custom">
         <input
+          id="customQuestion"
           type="text"
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          placeholder="Type your answer here..."
-          disabled={isLoading || conversationStep > 2}
+          value={customQuestion}
+          onChange={(e) => setCustomQuestion(e.target.value)}
+          onKeyPress={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendCustomQuestion(); } }}
+          placeholder="Ask me anything..."
+          disabled={isLoading}
         />
         <button 
           onClick={handleSendMessage} 
@@ -522,12 +725,16 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
         >
           {isRecording ? 'Stop' : '🎤'}
         </button>
+          <button
+            onClick={handleSendCustomQuestion}
+            disabled={isLoading || !customQuestion.trim()}
+            className="btn-send btn-custom"
+          >
+            Send
+          </button>
       </div>
 
       <div className="chatbot-footer">
-        <button onClick={() => navigate('/recommendations')} className="btn-link">
-          Skip to Browse All Foods
-        </button>
       </div>
     </div>
   );
