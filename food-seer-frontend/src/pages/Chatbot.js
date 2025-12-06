@@ -7,11 +7,8 @@ const Chatbot = () => {
   const messagesEndRef = useRef(null);
   const [currentUserId, setCurrentUserId] = useState(null);
 
-  const QUESTIONS = [
-    "Hi! I'm your FoodSeer assistant. How are you feeling today? (e.g., tired, energetic, stressed, happy)",
-    "How hungry are you right now? (e.g., very hungry, a bit peckish, just want a snack)",
-    "What kind of food are you in the mood for? (e.g., something light, comfort food, healthy, sweet)"
-  ];
+  // Initial greeting - only used once at the start
+  const INITIAL_GREETING = "Hi! I'm your FoodSeer assistant. I'll ask you a few questions to find the perfect meal for you!";
 
   // Load state from localStorage or use defaults (user-specific)
   const loadState = (userId) => {
@@ -45,6 +42,9 @@ const Chatbot = () => {
   });
   const [recommendedFood, setRecommendedFood] = useState(null);
   const [stateLoaded, setStateLoaded] = useState(false);
+  // Speech API state
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef(null);
   const [customQuestion, setCustomQuestion] = useState('');
 
   // Load user and their chatbot state on mount
@@ -94,20 +94,132 @@ const Chatbot = () => {
   }, [messages, conversationStep, userResponses, recommendedFood, currentUserId, stateLoaded]);
 
   useEffect(() => {
+    // Start with the initial greeting if no saved state
+    if (messages.length === 0 && stateLoaded) {
+      setMessages([{
+        role: 'assistant',
+        content: INITIAL_GREETING
     // Start with a simple greeting only if no messages loaded from history
     if (messages.length === 0 && stateLoaded) {
       setMessages([{
         role: 'assistant',
         content: 'Hi! I\'m your FoodSeer AI assistant. Ask me anything about our menu or food recommendations!'
       }]);
+      
+      // Generate and add the first dynamic question
+      const generateFirstQuestion = async () => {
+        try {
+          const userData = await getCurrentUser();
+          const firstQuestion = await generateNextQuestion([{
+            role: 'assistant',
+            content: INITIAL_GREETING
+          }], userData, { mood: '', hunger: '', preference: '' });
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: firstQuestion
+          }]);
+        } catch (error) {
+          console.error('Error generating first question:', error);
+          // Fallback
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: "How are you feeling today? (e.g., tired, energetic, stressed, happy)"
+          }]);
+        }
+      };
+      
+      generateFirstQuestion();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateLoaded]);
+
+  // Initialize SpeechRecognition if available
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recog = new SpeechRecognition();
+    recog.lang = 'en-US';
+    recog.interimResults = false;
+    recog.maxAlternatives = 1;
+
+    recog.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputMessage(prev => (prev ? prev + ' ' + transcript : transcript));
+      // Auto-send on final result
+      // Only auto-send when not loading
+      if (!isLoading) {
+        setTimeout(() => handleSendMessage(), 50);
+      }
+    };
+
+    recog.onerror = (e) => {
+      console.error('Speech recognition error', e);
+      setIsRecording(false);
+    };
+
+    recog.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recog;
+    // cleanup
+    return () => {
+      try { recog.onresult = null; recog.onend = null; recog.onerror = null; } catch (e) {}
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     // Scroll to bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const generateNextQuestion = async (conversationHistory, userData, currentResponses) => {
+    // Build context about what we know and what we need
+    const knownInfo = [];
+    if (currentResponses.mood) knownInfo.push(`Mood: ${currentResponses.mood}`);
+    if (currentResponses.hunger) knownInfo.push(`Hunger level: ${currentResponses.hunger}`);
+    if (currentResponses.preference) knownInfo.push(`Food preference: ${currentResponses.preference}`);
+    
+    const neededInfo = [];
+    if (!currentResponses.mood) neededInfo.push('their current mood/feeling');
+    if (!currentResponses.hunger) neededInfo.push('their hunger level');
+    if (!currentResponses.preference) neededInfo.push('what kind of food they want');
+    
+    const conversationContext = conversationHistory
+      .slice(-4) // Last 4 messages for context
+      .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+      .join('\n');
+    
+    const questionPrompt = `You are a friendly food recommendation assistant. Based on the conversation so far, ask ONE natural, conversational question to learn more about the user.
+
+Conversation so far:
+${conversationContext}
+
+What we already know: ${knownInfo.length > 0 ? knownInfo.join(', ') : 'Nothing yet'}
+What we still need to know: ${neededInfo.join(', ')}
+
+User's profile: Budget preference: ${userData?.costPreference || 'moderate'}, Dietary restrictions: ${userData?.dietaryRestrictions || 'none'}
+
+Generate a single, friendly, conversational question (1-2 sentences max) that feels natural and helps you understand ${neededInfo[0] || 'what they want'}. Be specific and engaging based on what they've already told you. Do NOT include any explanations or prefixes, just the question itself.`;
+    
+    try {
+      const response = await sendChatMessage(questionPrompt);
+      return response.message.trim();
+    } catch (error) {
+      console.error('Error generating question:', error);
+      // Fallback questions based on what we need
+      if (!currentResponses.mood) {
+        return "How are you feeling today? (e.g., tired, energetic, stressed, happy)";
+      } else if (!currentResponses.hunger) {
+        return "How hungry are you right now? (e.g., very hungry, a bit peckish, just want a snack)";
+      } else if (!currentResponses.preference) {
+        return "What kind of food are you in the mood for? (e.g., something light, comfort food, healthy, sweet)";
+      }
+      return "Is there anything else you'd like to tell me about your food preferences?";
+    }
+  };
 
   const getPersonalizedPrompt = (mood, hunger, preference, userData, foods) => {
     const budget = userData?.costPreference || 'moderate';
@@ -181,6 +293,44 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
         const nextStep = conversationStep + 1;
         setConversationStep(nextStep);
         
+        const personalizedPrompt = getPersonalizedPrompt(
+          responses.mood,
+          responses.hunger,
+          inputMessage, // current preference
+          userData,
+          foods
+        );
+
+        // Send to AI for recommendation
+        const aiResponse = await sendChatMessage(personalizedPrompt);
+
+        // Find the full food object
+        const matchedFood = foods.find(f => 
+          aiResponse.message.toLowerCase().includes(f.foodName.toLowerCase())
+        );
+
+        setRecommendedFood(matchedFood);
+
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: aiResponse.message
+        }]);
+
+        // Speak the AI response using SpeechSynthesis
+        try {
+          if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(aiResponse.message);
+            // Optionally set voice or rate here
+            utterance.lang = 'en-US';
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+          }
+        } catch (e) {
+          console.error('TTS error', e);
+        }
+
+        // If we found a match, show order button
+        if (matchedFood) {
         if (nextStep < 3) {
           // Ask next question
           setMessages(prev => [...prev, {
@@ -195,6 +345,34 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
           }]);
         }
       } else {
+        // Generate next question based on conversation context
+        const nextStep = conversationStep + 1;
+        setConversationStep(nextStep);
+        
+        // Generate dynamic question based on conversation history
+        try {
+          const userData = await getCurrentUser();
+          const conversationHistory = [...messages, userMessage];
+          const nextQuestion = await generateNextQuestion(conversationHistory, userData, responses);
+          
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: nextQuestion
+          }]);
+        } catch (error) {
+          console.error('Error generating next question:', error);
+          // Fallback to static questions
+          let fallbackQuestion = "";
+          if (nextStep === 1) {
+            fallbackQuestion = "How hungry are you right now? (e.g., very hungry, a bit peckish, just want a snack)";
+          } else if (nextStep === 2) {
+            fallbackQuestion = "What kind of food are you in the mood for? (e.g., something light, comfort food, healthy, sweet)";
+          }
+          
+          setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: fallbackQuestion
+          }]);
         // Free conversation mode - send raw user input to backend
         const historyPayload = messages.map(m => ({ role: m.role, content: m.content }));
         const aiResponse = await sendChatMessage({
@@ -318,6 +496,30 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
   };
 
   const handleStartOver = async () => {
+    const newMessages = [{
+      role: 'assistant',
+      content: INITIAL_GREETING
+    }];
+    
+    // Generate first question
+    try {
+      const userData = await getCurrentUser();
+      const firstQuestion = await generateNextQuestion(newMessages, userData, { mood: '', hunger: '', preference: '' });
+      newMessages.push({
+        role: 'assistant',
+        content: firstQuestion
+      });
+    } catch (error) {
+      console.error('Error generating first question:', error);
+      newMessages.push({
+        role: 'assistant',
+        content: "How are you feeling today? (e.g., tired, energetic, stressed, happy)"
+      });
+    }
+    
+    const newState = {
+      messages: newMessages,
+      conversationStep: 0,
     setIsLoading(true);
 
     // Clear server-side conversation history (if logged in)
@@ -415,6 +617,26 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
     }
   };
 
+  const handleToggleRecording = () => {
+    const recog = recognitionRef.current;
+    if (!recog) {
+      console.warn('SpeechRecognition not available in this browser.');
+      return;
+    }
+
+    if (isRecording) {
+      try { recog.stop(); } catch (e) {}
+      setIsRecording(false);
+    } else {
+      try {
+        recog.start();
+        setIsRecording(true);
+      } catch (e) {
+        console.error('Error starting recognition', e);
+      }
+    }
+  };
+
   return (
     <div className="chatbot-container">
       <div className="chatbot-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -488,6 +710,21 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
           placeholder="Ask me anything..."
           disabled={isLoading}
         />
+        <button 
+          onClick={handleSendMessage} 
+          disabled={isLoading || !inputMessage.trim() || conversationStep > 2}
+          className="btn-send"
+        >
+          Send
+        </button>
+        <button
+          onClick={handleToggleRecording}
+          className={`btn-record ${isRecording ? 'recording' : ''}`}
+          title={isRecording ? 'Stop recording' : 'Start speaking'}
+          type="button"
+        >
+          {isRecording ? 'Stop' : '🎤'}
+        </button>
           <button
             onClick={handleSendCustomQuestion}
             disabled={isLoading || !customQuestion.trim()}

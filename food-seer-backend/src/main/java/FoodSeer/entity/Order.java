@@ -12,6 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import jakarta.persistence.Column;
 
 /**
  * Represents an Order in the FoodSeer system.
@@ -42,6 +44,12 @@ public class Order {
     private boolean isFulfilled;
 
     /**
+     * Timestamp when the order was created. Used for analytics/trends.
+     */
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    /**
      * Default constructor for Hibernate.
      */
     public Order() {
@@ -59,6 +67,24 @@ public class Order {
         this.name = name;
         this.foods = new ArrayList<>();
         this.isFulfilled = false;
+    }
+
+    /**
+     * Gets the created timestamp.
+     *
+     * @return creation time
+     */
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    /**
+     * Sets the created timestamp.
+     *
+     * @param createdAt creation time
+     */
+    public void setCreatedAt(final LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     /**
