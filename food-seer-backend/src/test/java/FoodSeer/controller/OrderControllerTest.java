@@ -22,6 +22,7 @@ import FoodSeer.dto.InventoryDto;
 import FoodSeer.dto.OrderDto;
 import FoodSeer.entity.Food;
 import FoodSeer.entity.User;
+import FoodSeer.repositories.ConversationRepository;
 import FoodSeer.repositories.FoodRepository;
 import FoodSeer.repositories.OrderRepository;
 import FoodSeer.repositories.UserRepository;
@@ -59,11 +60,17 @@ class OrderControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    /** Repository for conversations */
+    @Autowired
+    private ConversationRepository conversationRepository;
+
     /**
      * Sets up test case by clearing repositories and creating sample data.
      */
     @BeforeEach
     public void setUp() throws Exception {
+        // Delete in proper order to avoid foreign key constraint violations
+        conversationRepository.deleteAll();
         orderRepository.deleteAll();
         foodRepository.deleteAll();
         userRepository.deleteAll();
@@ -207,12 +214,15 @@ class OrderControllerTest {
     @WithMockUser(username = "staff", roles = "STAFF")
     void testFulfillOrder_BadRequest() throws Exception {
         Food food = foodRepository.findAll().get(0);
-        food.setAmount(0); // no stock, will throw inside service
-        foodRepository.save(food);
-
+        // Create order with stock available
         OrderDto o = new OrderDto(0L, "FailOrder");
         o.setFoods(List.of(food));
         OrderDto saved = orderService.createOrder(o);
+
+        // Now reduce stock to 0 (simulating stock depletion)
+        food.setAmount(0);
+        foodRepository.save(food);
+        inventoryService.updateInventory(new InventoryDto(1L, List.of(food)));
 
         mvc.perform(post("/api/orders/fulfillOrder")
                 .contentType(MediaType.APPLICATION_JSON)

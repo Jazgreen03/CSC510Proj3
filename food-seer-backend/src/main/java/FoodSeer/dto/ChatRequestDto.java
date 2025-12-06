@@ -26,5 +26,14 @@ public class ChatRequestDto {
 
     /** Optional user id to build personalized prompts */
     private Long userId;
+
+    // Convenience constructor to preserve existing call sites that pass only the message
+    public ChatRequestDto(String message, Boolean speak) {
+        this.message = message;
+        this.speak = speak;
+        this.mode = null;
+        this.history = null;
+        this.userId = null;
+    }
 }
 

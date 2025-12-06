@@ -34,13 +34,21 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername ( final String usernameOrEmail ) throws UsernameNotFoundException {
-        final User user = userRepository.findByUsernameOrEmail( usernameOrEmail, usernameOrEmail )
+        // Just trim, don't force lowercase here so we can match what user typed if needed, 
+        // but rely on repository case-insensitive search.
+        String trimmed = usernameOrEmail.trim();
+        System.out.println("Loading user by identifier: '" + trimmed + "'");
+
+        final User user = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase( trimmed, trimmed )
                 .orElseThrow( () -> new UsernameNotFoundException(
-                        "User " + usernameOrEmail + " does not exist with the given username or email." ) );
+                        "User " + trimmed + " does not exist with the given username or email." ) );
         final Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
         authorities.add( new SimpleGrantedAuthority( user.getRole() ) );
 
-        return new org.springframework.security.core.userdetails.User( usernameOrEmail, user.getPassword(),
-                authorities );
+    // Use the actual username from the user entity as the principal name so
+    // downstream calls that lookup by username (e.g. getCurrentUser) work
+    // whether the user logged in with a username or an email.
+    return new org.springframework.security.core.userdetails.User( user.getUsername(), user.getPassword(),
+        authorities );
     }
 }
