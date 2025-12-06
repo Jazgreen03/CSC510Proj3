@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import FoodSeer.repositories.ConversationRepository;
 import FoodSeer.repositories.FoodRepository;
+import FoodSeer.repositories.OrderRepository;
 import FoodSeer.repositories.RoleRepository;
 import FoodSeer.repositories.UserRepository;
 import FoodSeer.service.impl.DataInitializer;
@@ -29,8 +31,17 @@ public class DataInitializerTest {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private ConversationRepository conversationRepository;
+
     @BeforeEach
     public void setup() {
+        // Delete in proper order to avoid foreign key constraint violations
+        conversationRepository.deleteAll();
+        orderRepository.deleteAll();
         foodRepository.deleteAll();
         userRepository.deleteAll();
         roleRepository.deleteAll();
