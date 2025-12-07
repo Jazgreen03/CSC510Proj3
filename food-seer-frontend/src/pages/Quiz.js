@@ -14,6 +14,7 @@ const Quiz = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [stateLoaded, setStateLoaded] = useState(false);
   const [userAllergies, setUserAllergies] = useState([]);
+  const [highlightAllergenFree, setHighlightAllergenFree] = useState(false);
 
   const questions = [
     {
@@ -94,18 +95,25 @@ const Quiz = () => {
         setCurrentUserId(user.id);
         setUserPreferences(user.preferences);
         
-        // Extract user's allergies
+        // Extract user's allergies from dietaryRestrictions
         let allergies = [];
-        if (user.preferences?.dietaryRestrictions) {
+        if (user.dietaryRestrictions) {
+          // Handle comma-separated string format from API
+          allergies = user.dietaryRestrictions
+            .split(',')
+            .map(a => a.trim())
+            .filter(a => a.length > 0);
+        } else if (user.preferences?.dietaryRestrictions) {
           try {
             allergies = typeof user.preferences.dietaryRestrictions === 'string'
-              ? JSON.parse(user.preferences.dietaryRestrictions)
+              ? user.preferences.dietaryRestrictions.split(',').map(a => a.trim()).filter(a => a.length > 0)
               : user.preferences.dietaryRestrictions;
           } catch {
             allergies = [];
           }
         }
         setUserAllergies(allergies);
+        console.log('Parsed user allergies:', allergies);
         
         const foods = await getAllFoods();
         // Filter by budget and allergies - CRITICAL: only safe foods
@@ -163,27 +171,30 @@ const Quiz = () => {
       filtered = filtered.filter(food => food.price <= maxPrice);
     }
 
-    // Filter by dietary restrictions (allergies)
+    // Filter by dietary restrictions (allergies) - check both locations
+    let allergies = [];
     if (preferences.dietaryRestrictions) {
-      let allergies = [];
-      try {
-        allergies = typeof preferences.dietaryRestrictions === 'string'
-          ? JSON.parse(preferences.dietaryRestrictions)
-          : preferences.dietaryRestrictions;
-      } catch {
-        allergies = [];
-      }
+      // Handle comma-separated string format from API
+      allergies = preferences.dietaryRestrictions
+        .split(',')
+        .map(a => a.trim())
+        .filter(a => a.length > 0);
+    }
 
-      if (allergies.length > 0) {
-        filtered = filtered.filter(food => {
-          const foodAllergies = food.allergies || [];
-          return !allergies.some(allergy => 
-            foodAllergies.some(foodAllergy => 
-              foodAllergy.toLowerCase() === allergy.toLowerCase()
-            )
-          );
-        });
-      }
+    if (allergies.length > 0) {
+      console.log('Filtering foods by allergies:', allergies);
+      filtered = filtered.filter(food => {
+        const foodAllergies = (food.allergies || []).map(a => a.toLowerCase());
+        const userAllergyList = allergies.map(a => a.toLowerCase());
+        const hasAllergen = userAllergyList.some(allergy => foodAllergies.includes(allergy));
+        
+        if (hasAllergen) {
+          console.log(`Filtered out: ${food.foodName} - contains: ${food.allergies.join(', ')}`);
+        }
+        
+        return !hasAllergen;
+      });
+      console.log(`After allergy filter: ${filtered.length} foods remaining`);
     }
 
     return filtered;
@@ -355,13 +366,51 @@ const Quiz = () => {
             ✅ <strong>Allergen-Safe:</strong> All recommendations exclude {userAllergies.join(', ')}
           </div>
         )}
+        <button 
+          className={`btn-secondary ${highlightAllergenFree ? 'active' : ''}`}
+          onClick={() => setHighlightAllergenFree(!highlightAllergenFree)}
+          style={{ marginTop: '10px' }}
+        >
+          {highlightAllergenFree ? '✓ Highlighting Safe Foods' : '🔍 Highlight Foods Safe For You'}
+        </button>
       </div>
 
         {recommendations.length > 0 ? (
           <div className="quiz-recommendations">
-            {recommendations.map((food, index) => (
-              <div key={food.id} className="recommendation-card">
+            {recommendations.map((food, index) => {
+              // Check if food contains any of the user's specific allergies
+              const foodAllergies = (food.allergies || []).map(a => a.toLowerCase());
+              const userAllergyList = userAllergies.map(a => a.toLowerCase());
+              const containsUserAllergy = userAllergyList.some(allergy => foodAllergies.includes(allergy));
+              const isAllergenFree = !containsUserAllergy; // Safe from user's allergies
+              const shouldHighlight = highlightAllergenFree && isAllergenFree;
+              
+              return (
+              <div 
+                key={food.id} 
+                className={`recommendation-card ${shouldHighlight ? 'allergen-free-highlight' : ''}`}
+                style={shouldHighlight ? {
+                  border: '3px solid #10b981',
+                  backgroundColor: '#f0fdf4',
+                  boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)'
+                } : {}}
+              >
                 <div className="recommendation-rank">#{index + 1}</div>
+                {isAllergenFree && highlightAllergenFree && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    ✓ SAFE FOR YOU
+                  </div>
+                )}
                 <h3>{food.foodName}</h3>
                 <p className="recommendation-price">${food.price.toFixed(2)}</p>
                 <p className="recommendation-stock">In Stock: {food.amount}</p>
@@ -377,7 +426,7 @@ const Quiz = () => {
                   Add to Cart
                 </button>
               </div>
-            ))}
+            )})}
           </div>
         ) : (
           <div className="no-recommendations">
@@ -460,4 +509,3 @@ const Quiz = () => {
 };
 
 export default Quiz;
-
