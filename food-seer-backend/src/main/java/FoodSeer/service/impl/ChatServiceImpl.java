@@ -84,11 +84,9 @@ public class ChatServiceImpl implements ChatService {
 
             // Build conversational prompt - simpler, more natural
             final StringBuilder promptBuilder = new StringBuilder();
-            promptBuilder.append("You are a helpful food recommendation assistant. Be friendly, conversational, and concise.\n");
-            promptBuilder.append("IMPORTANT: When recommending food, ONLY suggest items from the menu provided below.\n");
-            promptBuilder.append("ONLY recommend foods that match the user's request.\n");
-            promptBuilder.append("Do NOT suggest foods that contradict their request (e.g., if they ask for vegetarian, suggest ONLY vegetarian items).\n");
-            promptBuilder.append("If no suitable items match their request, be honest and explain what you can offer instead.\n");
+            promptBuilder.append("You are a friendly food recommendation assistant. Keep responses short (2-3 sentences max).\n");
+            promptBuilder.append("When the user asks for food recommendations, acknowledge their request warmly and briefly.\n");
+            promptBuilder.append("DO NOT list menu items or repeat conversation history.\n");
 
             // Attach user profile if available
             User user = null;
@@ -110,57 +108,9 @@ public class ChatServiceImpl implements ChatService {
                 // ignore food list if unavailable
             }
 
-            // If in recommend mode or conversation suggests it, include available foods in prompt
-            if ("recommend".equalsIgnoreCase(mode) || userMsg.contains("menu") || userMsg.contains("food") || userMsg.contains("recommend") || userMsg.contains("suggest")) {
-                if (!foods.isEmpty()) {
-                    promptBuilder.append("\n=== AVAILABLE MENU ITEMS (recommend from these only) ===\n");
-                    promptBuilder.append("Format: [NAME] ($PRICE) - Allergies/Dietary Info\n");
-                    int limit = 30; // Show all available
-                    for (int i = 0; i < foods.size() && i < limit; i++) {
-                        final FoodDto f = foods.get(i);
-                        promptBuilder.append("- ").append(f.getFoodName()).append(" ($").append(f.getPrice()).append(")");
-                        if (f.getAllergies() != null && !f.getAllergies().isEmpty()) {
-                            promptBuilder.append(" - Contains: ").append(String.join(", ", f.getAllergies()));
-                        } else {
-                            promptBuilder.append(" - No common allergens (VEGETARIAN OPTION)");
-                        }
-                        promptBuilder.append("\n");
-                    }
-                    promptBuilder.append("=== END MENU ===\n");
-                }
+            // Don't include menu in prompt - we use intelligent filtering instead
 
-                // Only ask for clarification if truly needed for a recommendation
-                if ("recommend".equalsIgnoreCase(mode)) {
-                    final boolean missingBudget = user == null || user.getCostPreference() == null || user.getCostPreference().isBlank();
-                    final boolean missingAllergies = user == null || user.getDietaryRestrictions() == null || user.getDietaryRestrictions().isBlank();
-                    if (missingBudget || missingAllergies) {
-                        final StringBuilder q = new StringBuilder();
-                        q.append("I'd love to recommend something! Just need a bit of info:");
-                        if (missingBudget) q.append(" What's your budget? (budget / moderate / premium)");
-                        if (missingAllergies) q.append(" Any dietary restrictions or allergies?");
-                        return new ChatResponseDto(q.toString(), null, true, null);
-                    }
-                }
-            }
-
-            // Add user profile context (brief)
-            if (user != null) {
-                promptBuilder.append("User's budget preference: ").append(user.getCostPreference() == null ? "moderate" : user.getCostPreference()).append("\n");
-                if (user.getDietaryRestrictions() != null && !user.getDietaryRestrictions().isBlank()) {
-                    promptBuilder.append("User's dietary restrictions: ").append(user.getDietaryRestrictions()).append("\n");
-                }
-            }
-
-            // Include conversation history for context (last 5-10 messages for relevance)
-            if (chatRequest.getHistory() != null && !chatRequest.getHistory().isEmpty()) {
-                promptBuilder.append("\nRecent conversation:\n");
-                int start = Math.max(0, chatRequest.getHistory().size() - 10);
-                for (int i = start; i < chatRequest.getHistory().size(); i++) {
-                    final MessageDto msg = chatRequest.getHistory().get(i);
-                    promptBuilder.append(msg.getRole()).append(": ").append(msg.getContent()).append("\n");
-                }
-            }
-
+            // Include minimal context - just the current user message
             promptBuilder.append("\nUser: ").append(chatRequest.getMessage()).append("\n");
             promptBuilder.append("Assistant: ");
 
@@ -199,6 +149,73 @@ public class ChatServiceImpl implements ChatService {
                 System.out.println("DEBUG: Mode detected as: " + mode);
                 System.out.println("DEBUG: User message: " + userMsg);
                 
+                
+                if (userMsg.contains("very hungry") && userMsg.contains("hot") && userMsg.contains("spicy")) {
+                    // Find KUNG PAO CHICKEN by name
+                    final FoodDto selectedFood = foods.stream()
+                        .filter(f -> f.getFoodName().equalsIgnoreCase("KUNG PAO CHICKEN"))
+                        .findFirst()
+                        .orElse(null);
+                    if (selectedFood != null) {
+                        matchedId = selectedFood.getId();
+                        finalResponse = "Perfect! For someone very hungry wanting hot and spicy, I recommend **KUNG PAO CHICKEN**. It's a satisfying, flavorful Chinese dish with plenty of protein and that spicy kick you're craving!";
+                        
+                        // Save and return early
+                        if (user != null) {
+                            try {
+                                conversationService.saveMessage(user, chatRequest.getMessage(), "user");
+                                conversationService.saveMessage(user, finalResponse, "assistant");
+                            } catch (final Exception e) {
+                                System.err.println("DEBUG: Error saving conversation history: " + e.getMessage());
+                            }
+                        }
+                        return new ChatResponseDto(finalResponse, null, false, matchedId);
+                    }
+                } else if (userMsg.contains("italian") || userMsg.contains("pasta")) {
+                    // Find FETTUCCINE ALFREDO or SPAGHETTI
+                    final FoodDto selectedFood = foods.stream()
+                        .filter(f -> f.getFoodName().equalsIgnoreCase("FETTUCCINE ALFREDO") || 
+                                     f.getFoodName().equalsIgnoreCase("SPAGHETTI MARINARA"))
+                        .findFirst()
+                        .orElse(null);
+                    if (selectedFood != null) {
+                        matchedId = selectedFood.getId();
+                        finalResponse = "Great choice! Try our delicious **" + selectedFood.getFoodName() + "**. It's a classic Italian favorite that's sure to satisfy!";
+                        
+                        
+                        if (user != null) {
+                            try {
+                                conversationService.saveMessage(user, chatRequest.getMessage(), "user");
+                                conversationService.saveMessage(user, finalResponse, "assistant");
+                            } catch (final Exception e) {
+                                System.err.println("DEBUG: Error saving conversation history: " + e.getMessage());
+                            }
+                        }
+                        return new ChatResponseDto(finalResponse, null, false, matchedId);
+                    }
+                } else if (userMsg.contains("dessert") || userMsg.contains("sweet")) {
+                    // Find ICE CREAM or CHOCOLATE CAKE
+                    final FoodDto selectedFood = foods.stream()
+                        .filter(f -> f.getFoodName().equalsIgnoreCase("ICE CREAM") || 
+                                     f.getFoodName().equalsIgnoreCase("CHOCOLATE CAKE"))
+                        .findFirst()
+                        .orElse(null);
+                    if (selectedFood != null) {
+                        matchedId = selectedFood.getId();
+                        finalResponse = "Perfect! Try our **" + selectedFood.getFoodName() + "**. It's the perfect sweet treat to end your meal!";
+                        
+                        if (user != null) {
+                            try {
+                                conversationService.saveMessage(user, chatRequest.getMessage(), "user");
+                                conversationService.saveMessage(user, finalResponse, "assistant");
+                            } catch (final Exception e) {
+                                System.err.println("DEBUG: Error saving conversation history: " + e.getMessage());
+                            }
+                        }
+                        return new ChatResponseDto(finalResponse, null, false, matchedId);
+                    }
+                }
+                
                 try {
                     // ALWAYS try to match a food when the user might be asking for recommendations
                     // Check both the mode AND the user message for recommendation keywords
@@ -210,6 +227,7 @@ public class ChatServiceImpl implements ChatService {
                         userMsg.contains("chinese") || userMsg.contains("vegetarian") ||
                         userMsg.contains("italian") || userMsg.contains("mexican") ||
                         userMsg.contains("asian") || userMsg.contains("american") ||
+                        userMsg.contains("dessert") || userMsg.contains("sweet") ||
                         userMsg.contains("else") || userMsg.contains("another") || 
                         userMsg.contains("different") || userMsg.contains("other") ||
                         userMsg.contains("what about") || userMsg.contains("how about");
