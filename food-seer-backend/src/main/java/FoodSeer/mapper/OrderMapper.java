@@ -32,6 +32,7 @@ public class OrderMapper {
                 .collect(Collectors.toList()));
 
         dto.setIsFulfilled(order.getIsFulfilled());
+                dto.setCreatedAt(order.getCreatedAt());
         return dto;
     }
 
@@ -54,6 +55,7 @@ public class OrderMapper {
                 .collect(Collectors.toList()));
 
         order.setIsFulfilled(orderDto.getIsFulfilled());
+                order.setCreatedAt(orderDto.getCreatedAt());
         return order;
     }
 }

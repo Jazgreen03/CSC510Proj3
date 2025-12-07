@@ -82,6 +82,7 @@ public class OrderServiceImpl implements OrderService {
 
     // Create order
     final Order order = new Order();
+    order.setCreatedAt(java.time.LocalDateTime.now());
     order.setName(orderDto.getName());
     order.setFoods(foods);
     order.setIsFulfilled(false);

@@ -32,14 +32,19 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResponseEntity<Map<String, String>> register ( final RegisterRequestDto req ) {
+        String username = req.username().trim().toLowerCase();
+        String email = req.email().trim().toLowerCase();
+        
+        System.out.println("Processing registration for username: '" + username + "', email: '" + email + "'");
+
         // Username checks
-        if ( userRepository.existsByUsername( req.username() ) ) {
+        if ( userRepository.existsByUsername( username ) ) {
             return ResponseEntity.badRequest().body( Map.of( "error", "Username already taken" ) );
         }
-        if ( req.username().length() > 50 || req.username().length() < 3 ){
+        if ( username.length() > 50 || username.length() < 3 ){
             return ResponseEntity.badRequest().body( Map.of( "error", "Username must be between 3-50 characters" ) );
         }
-        for(Character c : req.username().toCharArray()){
+        for(Character c : username.toCharArray()){
             if(!Character.isAlphabetic(c) && c != '_' && c != '-'){
                 return ResponseEntity.badRequest().body( Map.of( "error", "Username must only contain letters, -, and _" ) );
             }
@@ -51,20 +56,27 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Email checks
-        if ( req.email().length() > 254 ||  !req.email().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")){
-            return ResponseEntity.badRequest().body( Map.of( "error", "Username must be between 3-50 characters" ) );
+        if ( email.length() > 254 ||  !email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")){
+            return ResponseEntity.badRequest().body( Map.of( "error", "Invalid email format" ) );
         }
-        
         
         final String hash = passwordEncoder.encode( req.password() );
         final User hashedUser = new User( req, hash );
+        hashedUser.setUsername(username);
+        hashedUser.setEmail(email);
+        
         userRepository.save( hashedUser );
+        System.out.println("User registered successfully: " + username);
         return ResponseEntity.ok( Map.of( "message", "Registered" ) );
     }
 
     @Override
     public ResponseEntity<AuthResponseDto> login ( final LoginRequestDto req ) {
-        final UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken( req.username(),
+        // Only trim, let CustomUserDetailsService handle case-insensitive lookup
+        String loginIdentifier = req.username().trim();
+        System.out.println("Processing login for identifier: '" + loginIdentifier + "'");
+
+        final UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken( loginIdentifier,
                 req.password() );
         final Authentication authentication = authManager.authenticate( auth );
 

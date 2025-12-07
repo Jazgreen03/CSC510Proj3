@@ -10,8 +10,10 @@ import Orders from './pages/Orders';
 import OrderManagement from './pages/OrderManagement';
 import InventoryManagement from './pages/InventoryManagement';
 import UserManagement from './pages/UserManagement';
+import AdminStats from './pages/AdminStats';
 import Chatbot from './pages/Chatbot';
 import Quiz from './pages/Quiz';
+import AnalyticsOverview from './pages/AnalyticsOverview';
 import Navigation from './components/Navigation';
 import { isAuthenticated } from './services/api';
 
@@ -140,6 +142,26 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <UserManagement />
+                </AppLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <AdminStats />
+                </AppLayout>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/analytics" 
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <AnalyticsOverview />
                 </AppLayout>
               </ProtectedRoute>
             } 

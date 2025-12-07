@@ -51,11 +51,17 @@ class OrderRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    /** Reference to Conversation repository */
+    @Autowired
+    private ConversationRepository conversationRepository;
+
     /**
      * Sets up the test case by clearing tables and adding initial food/inventory data.
      */
     @BeforeEach
     public void setUp() throws Exception {
+        // Delete in proper order to avoid foreign key constraint violations
+        conversationRepository.deleteAll();
         orderRepository.deleteAll();
         foodRepository.deleteAll();
         userRepository.deleteAll();

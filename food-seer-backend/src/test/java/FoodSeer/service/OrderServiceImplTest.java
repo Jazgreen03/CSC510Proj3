@@ -23,6 +23,7 @@ import FoodSeer.entity.Food;
 import FoodSeer.entity.Order;
 import FoodSeer.entity.User;
 import FoodSeer.mapper.FoodMapper;
+import FoodSeer.repositories.ConversationRepository;
 import FoodSeer.repositories.FoodRepository;
 import FoodSeer.repositories.InventoryRepository;
 import FoodSeer.repositories.OrderRepository;
@@ -62,13 +63,19 @@ class OrderServiceImplTest {
     @Autowired
     private UserRepository userRepository;
 
+    /** Reference to Conversation repository */
+    @Autowired
+    private ConversationRepository conversationRepository;
+
     /**
      * Clears all repositories before each test.
      */
     @BeforeEach
     public void setUp() throws Exception {
-        foodRepository.deleteAll();
+        // Delete in proper order to avoid foreign key constraint violations
+        conversationRepository.deleteAll();
         orderRepository.deleteAll();
+        foodRepository.deleteAll();
         inventoryRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -187,17 +194,23 @@ class OrderServiceImplTest {
     @Transactional
     @WithMockUser(username = "customer", roles = "CUSTOMER")
     void testFulfillOrderNotEnoughStock() {
-        // Setup inventory with low stock
-        Food food = new Food("TEA", 1, 3, new ArrayList<>());
+        // Setup inventory with enough stock initially
+        Food food = new Food("TEA", 2, 3, new ArrayList<>());
         foodRepository.save(food);
         inventoryService.createInventory(new InventoryDto(1L, new ArrayList<>(List.of(food))));
 
-        // Create order with TWO TEAs (but inventory only has 1)
+        // Create order with TWO TEAs (stock is 2, so this should succeed)
         OrderDto orderDto = new OrderDto(0L, "TeaOrder");
         orderDto.setFoods(new ArrayList<>(List.of(food, food))); // ordering 2 units
 
         OrderDto savedOrder = orderService.createOrder(orderDto);
 
+        // Now reduce stock to 1 (simulating stock being used by another order)
+        food.setAmount(1);
+        foodRepository.save(food);
+        inventoryService.updateInventory(new InventoryDto(1L, new ArrayList<>(List.of(food))));
+
+        // Now fulfillment should fail because stock is insufficient
         IllegalArgumentException ex = org.junit.jupiter.api.Assertions.assertThrows(
                 IllegalArgumentException.class, () -> orderService.fulfillOrder(savedOrder.getId()));
 
