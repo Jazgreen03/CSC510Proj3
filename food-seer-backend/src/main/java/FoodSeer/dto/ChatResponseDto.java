@@ -23,5 +23,11 @@ public class ChatResponseDto {
         this.message = message;
         this.speak = null;
     }
+
+    /** If true, the backend is asking for clarification from the user */
+    private Boolean clarify;
+
+    /** If present, the ID of a matched food recommendation */
+    private Long matchedFoodId;
 }
 

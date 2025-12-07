@@ -589,14 +589,17 @@ export const getAnalyticsSnapshot = async (days = 30) => {
 // Scheduling and send-email endpoints removed from backend; frontend scheduling helpers removed.
 
 // Chat API calls
-export const sendChatMessage = async (message) => {
+export const sendChatMessage = async (payload) => {
   try {
+    // payload can be a string (message) or an object { message, mode, history, userId }
+    const body = typeof payload === 'string' ? { message: payload } : payload;
+
     const response = await fetch(`${API_BASE_URL}/api/chat`, {
       method: 'POST',
       headers: createHeaders(true),
-      body: JSON.stringify({ message }),
+      body: JSON.stringify(body),
     });
-    
+
     if (!response.ok) {
       let errorMessage = 'Failed to send message to AI';
       try {
@@ -619,6 +622,8 @@ export const sendChatMessage = async (message) => {
     }
     
     return data;
+
+    return await response.json();
   } catch (error) {
     console.error('Chat error:', error);
     // Re-throw with more context if it's a network error
@@ -629,3 +634,39 @@ export const sendChatMessage = async (message) => {
   }
 };
 
+// Conversation History API calls
+export const getConversationHistory = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/chat/history/${userId}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch conversation history');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get conversation history error:', error);
+    throw error;
+  }
+};
+
+export const clearConversationHistory = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/chat/history/${userId}`, {
+      method: 'DELETE',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to clear conversation history');
+    }
+
+    return await response.text();
+  } catch (error) {
+    console.error('Clear conversation history error:', error);
+    throw error;
+  }
+};

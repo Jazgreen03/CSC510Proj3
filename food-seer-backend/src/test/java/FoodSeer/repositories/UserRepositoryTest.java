@@ -23,13 +23,12 @@ public class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
     
-    private User testUser;
+    private int testCounter = 0;
     
-    @BeforeEach
-    void setUp() {
-        testUser = User.builder()
-                .username("testuser")
-                .email("test@example.com")
+    private User createTestUser(String suffix) {
+        return User.builder()
+                .username("testuser" + suffix)
+                .email("test" + suffix + "@example.com")
                 .password("password123")
                 .role(UserRoles.ROLE_CUSTOMER.name())
                 .build();
@@ -37,6 +36,7 @@ public class UserRepositoryTest {
     
     @Test
     void shouldSaveUser() {
+        User testUser = createTestUser("1");
         User savedUser = userRepository.save(testUser);
         assertThat(savedUser).isNotNull();
         assertThat(savedUser.getId()).isNotNull();
@@ -46,6 +46,7 @@ public class UserRepositoryTest {
     
     @Test
     void shouldFindUserByUsername() {
+        User testUser = createTestUser("2");
         entityManager.persist(testUser);
         entityManager.flush();
         
@@ -57,6 +58,7 @@ public class UserRepositoryTest {
     
     @Test
     void shouldReturnTrueWhenUsernameExists() {
+        User testUser = createTestUser("3");
         entityManager.persist(testUser);
         entityManager.flush();
         
@@ -72,6 +74,7 @@ public class UserRepositoryTest {
     
     @Test
     void shouldReturnTrueWhenEmailExists() {
+        User testUser = createTestUser("4");
         entityManager.persist(testUser);
         entityManager.flush();
         

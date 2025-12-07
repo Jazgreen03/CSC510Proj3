@@ -180,9 +180,24 @@ public class FoodServiceImpl implements FoodService {
 
     /**
      * Deletes all foods
+     * First removes foods from all orders to avoid foreign key constraint violations
      */
     @Override
+    @Transactional
     public void deleteAllFoods () {
+        // Get all orders
+        final List<Order> allOrders = orderRepository.findAll();
+        
+        // Remove all foods from all orders
+        for (final Order order : allOrders) {
+            order.getFoods().clear();
+            orderRepository.saveAndFlush(order);
+        }
+        
+        // Flush to ensure join table is updated
+        orderRepository.flush();
+        
+        // Now safe to delete all foods
         foodRepository.deleteAll();
     }
 
