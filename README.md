@@ -1,6 +1,6 @@
 # 🍽️ Food Seer - Smart Meal Recommendation System 🍽️
 
-[[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17538844.svg)](https://zenodo.org/records/17538844)]
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17850343.svg)](https://doi.org/10.5281/zenodo.17850343)
 [![License](https://img.shields.io/github/license/NovaCorz/CSC510)](https://github.com/NovaCorz/CSC510/blob/main/LICENSE)
 [![Rubric](https://img.shields.io/badge/Rubric-View-blue)](./RUBRIC.md)
 [![GitHub Release](https://img.shields.io/github/release/NovaCorz/CSC510.svg)](https://github.com/NovaCorz/CSC510/releases)
