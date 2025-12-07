@@ -66,10 +66,19 @@ const Chatbot = () => {
           const history = await getConversationHistory(user.id);
           if (history && history.length > 0) {
             // Convert from ConversationDto to message format
-            const messages = history.map(msg => ({
-              role: msg.role,
-              content: msg.messageContent
-            }));
+            // Filter out system prompts containing menu lists
+            const messages = history
+              .filter(msg => {
+                const content = msg.messageContent;
+                // Remove messages that contain full menu lists (have many food items listed)
+                const hasMenuList = content.includes('Available foods that match') || 
+                                   (content.includes('($') && content.split('($').length > 10); // Many prices = menu list
+                return !hasMenuList;
+              })
+              .map(msg => ({
+                role: msg.role,
+                content: msg.messageContent
+              }));
             setMessages(messages);
           }
         } catch (error) {
