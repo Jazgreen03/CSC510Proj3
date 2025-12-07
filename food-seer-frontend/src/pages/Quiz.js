@@ -357,26 +357,28 @@ const Quiz = () => {
 
   if (isComplete) {
     return (
-      <div className="quiz-container">
-      <div className="quiz-header">
-        <h2>📋 Your Personalized Recommendations</h2>
+      <div className="quiz-container" role="main" aria-label="Quiz results page">
+      <div className="quiz-header" role="region" aria-labelledby="results-heading">
+        <h2 id="results-heading"><span aria-hidden="true">📋</span> Your Personalized Recommendations</h2>
         <p>Based on your preferences and quiz answers</p>
         {userAllergies.length > 0 && (
-          <div className="allergen-safety-notice">
-            ✅ <strong>Allergen-Safe:</strong> All recommendations exclude {userAllergies.join(', ')}
+          <div className="allergen-safety-notice" role="status" aria-label={`All recommendations exclude ${userAllergies.join(', ')}`}>
+            <span aria-hidden="true">✅</span> <strong>Allergen-Safe:</strong> All recommendations exclude {userAllergies.join(', ')}
           </div>
         )}
         <button 
           className={`btn-secondary ${highlightAllergenFree ? 'active' : ''}`}
           onClick={() => setHighlightAllergenFree(!highlightAllergenFree)}
           style={{ marginTop: '10px' }}
+          aria-pressed={highlightAllergenFree}
+          aria-label={highlightAllergenFree ? 'Currently highlighting foods safe for you, click to turn off' : 'Highlight foods that are safe for you'}
         >
           {highlightAllergenFree ? '✓ Highlighting Safe Foods' : '🔍 Highlight Foods Safe For You'}
         </button>
       </div>
 
         {recommendations.length > 0 ? (
-          <div className="quiz-recommendations">
+          <div className="quiz-recommendations" role="region" aria-label={`${recommendations.length} food recommendations`}>
             {recommendations.map((food, index) => {
               // Check if food contains any of the user's specific allergies
               const foodAllergies = (food.allergies || []).map(a => a.toLowerCase());
@@ -394,8 +396,11 @@ const Quiz = () => {
                   backgroundColor: '#f0fdf4',
                   boxShadow: '0 4px 6px rgba(16, 185, 129, 0.2)'
                 } : {}}
+                role="article"
+                tabIndex={0}
+                aria-label={`Recommendation ${index + 1}, ${food.foodName}, Price ${food.price.toFixed(2)} dollars, ${food.amount} units in stock${food.allergies && food.allergies.length > 0 ? `, Contains ${food.allergies.join(', ')}` : ''}${isAllergenFree ? ', Safe for you' : ''}`}
               >
-                <div className="recommendation-rank">#{index + 1}</div>
+                <div className="recommendation-rank" aria-label={`Ranked number ${index + 1}`}>#{index + 1}</div>
                 {isAllergenFree && highlightAllergenFree && (
                   <div style={{
                     position: 'absolute',
@@ -407,21 +412,24 @@ const Quiz = () => {
                     borderRadius: '4px',
                     fontSize: '12px',
                     fontWeight: 'bold'
-                  }}>
-                    ✓ SAFE FOR YOU
+                  }}
+                  aria-label="This food is safe for your dietary restrictions"
+                  >
+                    <span aria-hidden="true">✓</span> SAFE FOR YOU
                   </div>
                 )}
-                <h3>{food.foodName}</h3>
-                <p className="recommendation-price">${food.price.toFixed(2)}</p>
-                <p className="recommendation-stock">In Stock: {food.amount}</p>
+                <h3 aria-hidden="true">{food.foodName}</h3>
+                <p className="recommendation-price" aria-hidden="true">${food.price.toFixed(2)}</p>
+                <p className="recommendation-stock" aria-hidden="true">In Stock: {food.amount}</p>
                 {food.allergies && food.allergies.length > 0 && (
-                  <div className="recommendation-allergies">
+                  <div className="recommendation-allergies" aria-hidden="true">
                     <small>Contains: {food.allergies.join(', ')}</small>
                   </div>
                 )}
                 <button 
                   className="btn-primary" 
                   onClick={() => handleOrderFood(food)}
+                  aria-label={`Add ${food.foodName} to cart`}
                 >
                   Add to Cart
                 </button>
@@ -429,16 +437,16 @@ const Quiz = () => {
             )})}
           </div>
         ) : (
-          <div className="no-recommendations">
-            <p>😔 No foods match your quiz answers. Try adjusting your preferences!</p>
+          <div className="no-recommendations" role="status" aria-live="polite">
+            <p><span aria-hidden="true">😔</span> No foods match your quiz answers. Try adjusting your preferences!</p>
           </div>
         )}
 
-        <div className="quiz-actions">
-          <button className="btn-secondary" onClick={handleRestart}>
-            🔄 Take Quiz Again
+        <div className="quiz-actions" role="navigation" aria-label="Quiz navigation">
+          <button className="btn-secondary" onClick={handleRestart} aria-label="Restart quiz and take it again">
+            <span aria-hidden="true">🔄</span> Take Quiz Again
           </button>
-          <button className="btn-link" onClick={() => navigate('/browse-foods')}>
+          <button className="btn-link" onClick={() => navigate('/browse-foods')} aria-label="Browse all available foods">
             Browse All Foods
           </button>
         </div>
@@ -447,13 +455,13 @@ const Quiz = () => {
   }
 
   return (
-    <div className="quiz-container">
-      <div className="quiz-header">
-        <h2>📋 Food Recommendation Quiz</h2>
+    <div className="quiz-container" role="main" aria-label="Food recommendation quiz">
+      <div className="quiz-header" role="region" aria-labelledby="quiz-title">
+        <h2 id="quiz-title"><span aria-hidden="true">📋</span> Food Recommendation Quiz</h2>
         <p>Answer {questions.length} quick questions to find your perfect meal!</p>
-        <div className="quiz-progress">
+        <div className="quiz-progress" role="status" aria-label={`Question ${currentQuestion + 1} of ${questions.length}`}>
           Question {currentQuestion + 1} of {questions.length}
-          <div className="progress-bar">
+          <div className="progress-bar" role="progressbar" aria-valuenow={currentQuestion + 1} aria-valuemin="1" aria-valuemax={questions.length} aria-label={`Quiz progress: ${Math.round(((currentQuestion + 1) / questions.length) * 100)} percent complete`}>
             <div 
               className="progress-fill" 
               style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
@@ -462,14 +470,15 @@ const Quiz = () => {
         </div>
       </div>
 
-      <div className="quiz-question">
-        <h3>{questions[currentQuestion].question}</h3>
-        <div className="quiz-options">
+      <div className="quiz-question" role="region" aria-labelledby={`question-${currentQuestion}`}>
+        <h3 id={`question-${currentQuestion}`}>{questions[currentQuestion].question}</h3>
+        <div className="quiz-options" role="group" aria-label="Answer options">
           {questions[currentQuestion].options.map((option) => (
             <button
               key={option.value}
               className="quiz-option-btn"
               onClick={() => handleAnswer(option.value)}
+              aria-label={`Select ${option.label.replace(/[🔥❄️🌡️☕🍰🍔🥨🌅☀️🌙⏰]/g, '').trim()}`}
             >
               {option.label}
             </button>
@@ -478,28 +487,28 @@ const Quiz = () => {
       </div>
 
       {currentQuestion > 0 && (
-        <div className="quiz-actions">
-          <button className="btn-secondary" onClick={handleGoBack}>
+        <div className="quiz-actions" role="navigation" aria-label="Quiz navigation">
+          <button className="btn-secondary" onClick={handleGoBack} aria-label="Go back to previous question">
             ← Back
           </button>
         </div>
       )}
 
-      <div className="quiz-footer">
+      <div className="quiz-footer" role="contentinfo" aria-label="User preferences and available options">
         <div className="quiz-info-box">
-          <div className="quiz-info-item">
-            💰 <strong>Budget:</strong> {userPreferences?.budget 
+          <div className="quiz-info-item" aria-label={`Budget preference: ${userPreferences?.budget ? `${userPreferences.budget}, 0 to ${userPreferences.budget === 'budget' ? '10' : userPreferences.budget === 'moderate' ? '20' : '35'} dollars` : 'No Limit'}`}>
+            <span aria-hidden="true">💰</span> <strong>Budget:</strong> {userPreferences?.budget 
               ? `${userPreferences.budget} ($0-${userPreferences.budget === 'budget' ? '10' : userPreferences.budget === 'moderate' ? '20' : '35'})`
               : 'No Limit'}
           </div>
           {userAllergies.length > 0 && (
-            <div className="quiz-info-item allergen-info">
-              ✅ <strong>Safe from:</strong> {userAllergies.join(', ')}
+            <div className="quiz-info-item allergen-info" aria-label={`Safe from allergies: ${userAllergies.join(', ')}`}>
+              <span aria-hidden="true">✅</span> <strong>Safe from:</strong> {userAllergies.join(', ')}
             </div>
           )}
           {availableFoods.length > 0 && (
-            <div className="quiz-info-item">
-              🍽️ <strong>Available options:</strong> {availableFoods.length} safe foods in stock
+            <div className="quiz-info-item" aria-label={`${availableFoods.length} safe foods available in stock`}>
+              <span aria-hidden="true">🍽️</span> <strong>Available options:</strong> {availableFoods.length} safe foods in stock
             </div>
           )}
         </div>

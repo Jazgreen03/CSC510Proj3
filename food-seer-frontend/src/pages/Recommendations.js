@@ -235,25 +235,25 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
 
   if (loading) {
     return (
-      <div className="recommendations-container">
-        <div className="loading">Loading...</div>
+      <div className="recommendations-container" role="main" aria-busy="true">
+        <div className="loading" role="status" aria-live="polite">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="recommendations-container">
-      <div className="user-info-card">
-        <h2>Welcome, {user?.username}!</h2>
-        <div className="preferences-summary">
+    <div className="recommendations-container" role="main" aria-label="Food recommendations page">
+      <div className="user-info-card" role="region" aria-labelledby="welcome-heading">
+        <h2 id="welcome-heading">Welcome, {user?.username}!</h2>
+        <div className="preferences-summary" role="group" aria-label="Your preferences">
           <div className="preference-item">
-            <span className="preference-label">💰 Budget:</span>
+            <span className="preference-label" aria-label="Budget preference">💰 Budget:</span>
             <span className="preference-value">
               {user?.costPreference || 'Not set'}
             </span>
           </div>
           <div className="preference-item">
-            <span className="preference-label">🥗 Dietary Restrictions:</span>
+            <span className="preference-label" aria-label="Dietary restrictions">🥗 Dietary Restrictions:</span>
             <span className="preference-value">
               {user?.dietaryRestrictions || 'None'}
             </span>
@@ -262,6 +262,7 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
         <button 
           className="update-preferences-button"
           onClick={handleUpdatePreferences}
+          aria-label="Update your preferences"
         >
           Update Preferences
         </button>
@@ -270,6 +271,7 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
       <section 
         className="meal-recommendations-section" 
         aria-labelledby="ai-meal-heading"
+        role="region"
         style={{ 
           margin: '2rem 0', 
           padding: '1.5rem', 
@@ -297,6 +299,7 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
             onClick={generateMealRecommendations}
             disabled={loadingMeals || filteredFoods.length === 0}
             aria-label={loadingMeals ? 'Generating meal ideas' : 'Generate AI meal recommendations'}
+            aria-disabled={loadingMeals || filteredFoods.length === 0}
             style={{
               padding: '0.75rem 1.5rem',
               backgroundColor: loadingMeals ? '#6c757d' : '#007bff',
@@ -314,7 +317,7 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
         </div>
 
         {showMeals && (
-          <div className="meals-content">
+          <div className="meals-content" aria-live="polite">
             {loadingMeals ? (
               <div 
                 className="loading-meals" 
@@ -326,7 +329,7 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
                   color: '#6c757d'
                 }}
               >
-                <div className="spinner" style={{
+                <div className="spinner" aria-hidden="true" style={{
                   width: '50px',
                   height: '50px',
                   border: '4px solid #f3f3f3',
@@ -341,6 +344,7 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
               <div 
                 className="error-message" 
                 role="alert"
+                aria-live="assertive"
                 style={{
                   padding: '1rem',
                   backgroundColor: '#f8d7da',
@@ -380,6 +384,7 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
                     role="listitem"
                     aria-labelledby={`meal-name-${index}`}
                     aria-describedby={`meal-details-${index}`}
+                    tabIndex={0}
                     style={{
                       backgroundColor: 'white',
                       padding: '1.5rem',
@@ -521,27 +526,32 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
         )}
       </section>
 
-      <div className="recommendations-content">
-        <h2>Your Personalized Recommendations</h2>
+      <div className="recommendations-content" role="region" aria-labelledby="recommendations-heading">
+        <h2 id="recommendations-heading">Your Personalized Recommendations</h2>
         {filteredFoods.length === 0 ? (
-          <div className="no-recommendations">
+          <div className="no-recommendations" role="status">
             <p>No foods match your current preferences.</p>
             <p>Try adjusting your budget or dietary restrictions, or browse all available foods.</p>
           </div>
         ) : (
         <div className="recommendations-grid">
             {filteredFoods.map((food) => (
-              <div key={food.id} className="recommendation-card">
-                <div className="recommendation-icon">🍽️</div>
-                <h3>{food.foodName}</h3>
-                <div className="food-details">
+              <div 
+                key={food.id} 
+                className="recommendation-card"
+                tabIndex={0}
+                aria-label={`${food.foodName}, Price ${food.price} dollars, ${food.amount > 0 ? `${food.amount} units available` : 'Out of stock'}${food.allergies && food.allergies.length > 0 ? `, Contains ${food.allergies.join(', ')}` : ''}`}
+              >
+                <div className="recommendation-icon" aria-hidden="true">🍽️</div>
+                <h3 aria-hidden="true">{food.foodName}</h3>
+                <div className="food-details" aria-hidden="true">
                   <p><strong>Price:</strong> ${food.price}</p>
                   <p><strong>Available:</strong> {food.amount > 0 ? `${food.amount} units` : 'Out of stock'}</p>
                   {food.allergies && food.allergies.length > 0 && (
                     <p><strong>Allergies:</strong> {food.allergies.join(', ')}</p>
                   )}
           </div>
-                <div className="recommendation-match">
+                <div className="recommendation-match" aria-hidden="true">
                   {food.amount > 0 ? '✓ Available' : '✗ Out of Stock'}
           </div>
         </div>
@@ -550,13 +560,12 @@ Respond ONLY with valid JSON array format (no markdown, no extra text):
         )}
       </div>
 
-      <div className="recommendations-footer">
+      <div className="recommendations-footer" role="contentinfo">
         <p>Recommendations are based on your cost preference ({user?.costPreference || 'not set'}) and dietary restrictions ({user?.dietaryRestrictions || 'none'}).</p>
-        <p>Showing {filteredFoods.length} of {foods.length} available foods.</p>
+        <p aria-label={`Showing ${filteredFoods.length} of ${foods.length} available foods`}>Showing {filteredFoods.length} of {foods.length} available foods.</p>
       </div>
     </div>
   );
 };
 
 export default Recommendations;
-
