@@ -100,34 +100,79 @@ public class DataInitializer {
         final int EXPECTED_FOOD_COUNT = 46; // Updated with expanded Chinese menu
         boolean foodsNeedTags = foodCount > 0 && foodRepository.findAll().stream()
             .anyMatch(f -> f.getTags() == null || f.getTags().isEmpty());
-        boolean needsUpdate = foodCount != EXPECTED_FOOD_COUNT;
+        
+        // Check if foods have OLD tag schema (HOT/COLD instead of HOT_TEMP/COLD_TEMP)
+        boolean hasOldTags = foodCount > 0 && foodRepository.findAll().stream()
+            .anyMatch(f -> f.getTags() != null && (
+                f.getTags().contains("HOT") || 
+                f.getTags().contains("COLD") ||
+                (!f.getTags().contains("HOT_TEMP") && !f.getTags().contains("COLD_TEMP") && !f.getTags().contains("ROOM_TEMP"))
+            ));
+        
+        boolean needsUpdate = foodCount != EXPECTED_FOOD_COUNT || hasOldTags;
         
         if (foodCount == 0 || foodsNeedTags || needsUpdate) {
-            if (foodsNeedTags) {
-                System.out.println("Foods exist but lack tags - clearing and reinitializing with tags...");
+            System.out.println("=== FOOD INITIALIZATION TRIGGERED ===");
+            System.out.println("Current food count: " + foodCount);
+            System.out.println("foodsNeedTags: " + foodsNeedTags);
+            System.out.println("hasOldTags: " + hasOldTags);
+            System.out.println("needsUpdate: " + needsUpdate);
+            
+            if (foodsNeedTags || hasOldTags || needsUpdate) {
+                if (foodsNeedTags) {
+                    System.out.println("Foods exist but lack tags - clearing and reinitializing with tags...");
+                } else if (hasOldTags) {
+                    System.out.println("Foods have OLD tag schema (HOT/COLD) - clearing and reinitializing with NEW tags (HOT_TEMP/COLD_TEMP/SPICY)...");
+                } else {
+                    System.out.println("Food count mismatch - clearing and reinitializing...");
+                }
                 try {
-                    // Delete orders first to avoid foreign key constraints
+                    // FORCE DELETE EVERYTHING - Delete orders first to avoid foreign key constraints
+                    System.out.println("FORCING COMPLETE DATABASE CLEANUP...");
                     System.out.println("Deleting all orders to clear foreign key constraints...");
                     orderRepository.deleteAll();
+                    orderRepository.flush();
+                    System.out.println("Orders deleted. Current order count: " + orderRepository.count());
+                    
                     System.out.println("Deleting all existing foods...");
                     foodRepository.deleteAll();
+                    foodRepository.flush();
+                    
+                    // Verify deletion
+                    long countAfterDelete = foodRepository.count();
+                    System.out.println("Foods deleted. Current food count: " + countAfterDelete);
+                    
+                    if (countAfterDelete > 0) {
+                        System.err.println("WARNING: Foods still exist after deleteAll()! Forcing individual deletion...");
+                        java.util.List<Food> remainingFoods = foodRepository.findAll();
+                        for (Food f : remainingFoods) {
+                            System.out.println("Deleting: " + f.getFoodName());
+                            foodRepository.delete(f);
+                        }
+                        foodRepository.flush();
+                        System.out.println("After individual deletion, food count: " + foodRepository.count());
+                    }
+                    
                     System.out.println("All data cleared successfully");
                 } catch (Exception e) {
                     System.err.println("Error during cleanup: " + e.getMessage());
                     e.printStackTrace();
+                    return; // Don't proceed if cleanup failed
                 }
-            } else if (needsUpdate && foodCount < EXPECTED_FOOD_COUNT) {
+            } else if (false && needsUpdate && foodCount < EXPECTED_FOOD_COUNT) {
                 System.out.println("Food count mismatch (found " + foodCount + ", expected " + EXPECTED_FOOD_COUNT + ") - clearing and reinitializing...");
                 try {
                     orderRepository.deleteAll();
                     foodRepository.deleteAll();
+                    System.out.println("Data cleared. Current food count: " + foodRepository.count());
                 } catch (Exception e) {
                     System.err.println("Error during cleanup: " + e.getMessage());
+                    return;
                 }
             } else if (foodCount == 0) {
                 System.out.println("Database empty - initializing sample food data...");
             } else {
-                System.out.println("Skipping food initialization");
+                System.out.println("Skipping food initialization - count matches and tags are correct");
                 return; // Don't reinitialize if count already correct or higher
             }
             
@@ -247,6 +292,19 @@ public class DataInitializer {
                 }
             } catch (final Exception e) {
                 System.out.println("Failed to create sample orders: " + e.getMessage());
+            }
+            
+            // Final verification
+            long finalCount = foodRepository.count();
+            System.out.println("=== FOOD INITIALIZATION COMPLETE ===");
+            System.out.println("Final food count: " + finalCount);
+            if (finalCount > 0) {
+                java.util.List<Food> allFoods = foodRepository.findAll();
+                System.out.println("Sample foods with tags:");
+                for (int i = 0; i < Math.min(5, allFoods.size()); i++) {
+                    Food f = allFoods.get(i);
+                    System.out.println("  - " + f.getFoodName() + ": " + f.getTags());
+                }
             }
         } else {
             System.out.println("Food database already contains " + foodRepository.count() + " items - skipping sample data creation.");
