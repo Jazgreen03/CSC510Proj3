@@ -150,71 +150,7 @@ public class ChatServiceImpl implements ChatService {
                 System.out.println("DEBUG: User message: " + userMsg);
                 
                 
-                if (userMsg.contains("very hungry") && userMsg.contains("hot") && userMsg.contains("spicy")) {
-                    // Find KUNG PAO CHICKEN by name
-                    final FoodDto selectedFood = foods.stream()
-                        .filter(f -> f.getFoodName().equalsIgnoreCase("KUNG PAO CHICKEN"))
-                        .findFirst()
-                        .orElse(null);
-                    if (selectedFood != null) {
-                        matchedId = selectedFood.getId();
-                        finalResponse = "Perfect! For someone very hungry wanting hot and spicy, I recommend **KUNG PAO CHICKEN**. It's a satisfying, flavorful Chinese dish with plenty of protein and that spicy kick you're craving!";
-                        
-                        // Save and return early
-                        if (user != null) {
-                            try {
-                                conversationService.saveMessage(user, chatRequest.getMessage(), "user");
-                                conversationService.saveMessage(user, finalResponse, "assistant");
-                            } catch (final Exception e) {
-                                System.err.println("DEBUG: Error saving conversation history: " + e.getMessage());
-                            }
-                        }
-                        return new ChatResponseDto(finalResponse, null, false, matchedId);
-                    }
-                } else if (userMsg.contains("italian") || userMsg.contains("pasta")) {
-                    // Find FETTUCCINE ALFREDO or SPAGHETTI
-                    final FoodDto selectedFood = foods.stream()
-                        .filter(f -> f.getFoodName().equalsIgnoreCase("FETTUCCINE ALFREDO") || 
-                                     f.getFoodName().equalsIgnoreCase("SPAGHETTI MARINARA"))
-                        .findFirst()
-                        .orElse(null);
-                    if (selectedFood != null) {
-                        matchedId = selectedFood.getId();
-                        finalResponse = "Great choice! Try our delicious **" + selectedFood.getFoodName() + "**. It's a classic Italian favorite that's sure to satisfy!";
-                        
-                        
-                        if (user != null) {
-                            try {
-                                conversationService.saveMessage(user, chatRequest.getMessage(), "user");
-                                conversationService.saveMessage(user, finalResponse, "assistant");
-                            } catch (final Exception e) {
-                                System.err.println("DEBUG: Error saving conversation history: " + e.getMessage());
-                            }
-                        }
-                        return new ChatResponseDto(finalResponse, null, false, matchedId);
-                    }
-                } else if (userMsg.contains("dessert") || userMsg.contains("sweet")) {
-                    // Find ICE CREAM or CHOCOLATE CAKE
-                    final FoodDto selectedFood = foods.stream()
-                        .filter(f -> f.getFoodName().equalsIgnoreCase("ICE CREAM") || 
-                                     f.getFoodName().equalsIgnoreCase("CHOCOLATE CAKE"))
-                        .findFirst()
-                        .orElse(null);
-                    if (selectedFood != null) {
-                        matchedId = selectedFood.getId();
-                        finalResponse = "Perfect! Try our **" + selectedFood.getFoodName() + "**. It's the perfect sweet treat to end your meal!";
-                        
-                        if (user != null) {
-                            try {
-                                conversationService.saveMessage(user, chatRequest.getMessage(), "user");
-                                conversationService.saveMessage(user, finalResponse, "assistant");
-                            } catch (final Exception e) {
-                                System.err.println("DEBUG: Error saving conversation history: " + e.getMessage());
-                            }
-                        }
-                        return new ChatResponseDto(finalResponse, null, false, matchedId);
-                    }
-                }
+                // Removed hardcoded logic blocks. Intelligent filtering will handle recommendations below.
                 
                 try {
                     // ALWAYS try to match a food when the user might be asking for recommendations
