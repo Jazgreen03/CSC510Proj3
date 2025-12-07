@@ -106,7 +106,7 @@ jobs:
       - name: Build & Run Tests with Coverage
         run: |
           cd food-seer-backend
-          mvn -B clean test
+          mvn -B clean test -Djacoco.skip=false
 
       - name: Check for JaCoCo report
         working-directory: food-seer-backend
