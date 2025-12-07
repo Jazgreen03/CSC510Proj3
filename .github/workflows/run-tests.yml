@@ -29,6 +29,7 @@ jobs:
       SPRING_TEST_DATABASE_REPLACE: any
       SPRING_SQL_INIT_MODE: never
       APP_JWT_SECRET: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
+      JACOCO_SKIP: false
 
     steps:
       - name: Check out repository
@@ -105,7 +106,7 @@ jobs:
       - name: Build & Run Tests with Coverage
         run: |
           cd food-seer-backend
-          mvn -B clean test
+          mvn -B clean test -Djacoco.skip=false
 
       - name: Check for JaCoCo report
         working-directory: food-seer-backend
