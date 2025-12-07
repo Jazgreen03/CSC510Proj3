@@ -212,6 +212,67 @@ code {
   font-size: 18px;
 }
 
+/* AGGRESSIVE LOGOUT BUTTON FIX */
+
+/* Ensure the main navigation doesn't clip */
+nav.main-navigation {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  min-width: 100% !important;
+}
+
+/* Container should allow overflow */
+nav.main-navigation div.nav-container {
+  overflow: visible !important;
+  min-width: max-content !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Nav menu should not clip */
+nav.main-navigation div.nav-menu {
+  overflow: visible !important;
+  min-width: max-content !important;
+}
+
+/* User section must have enough space */
+nav.main-navigation div.nav-user {
+  overflow: visible !important;
+  min-width: max-content !important;
+  flex-shrink: 0 !important;
+  padding-right: 1rem !important;
+}
+
+/* Logout button must be fully visible */
+nav.main-navigation div.nav-user button.logout-button {
+  padding: 0.55rem 1.5rem !important;
+  white-space: nowrap !important;
+  min-width: auto !important;
+  width: auto !important;
+  overflow: visible !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+}
+
+/* Alternative: Reduce padding on other elements if screen is too narrow */
+@media (max-width: 1400px) {
+  nav.main-navigation div.nav-container {
+    padding: 0 1rem !important;
+  }
+  
+  nav.main-navigation button.nav-link {
+    padding: 0.5rem 0.6rem !important;
+    font-size: 0.85rem !important;
+  }
+  
+  nav.main-navigation div.nav-brand {
+    margin-right: 1rem !important;
+  }
+  
+  nav.main-navigation div.nav-menu {
+    gap: 1rem !important;
+  }
+}
+
 .next-button {
   background-color: #007bff;
   color: white;

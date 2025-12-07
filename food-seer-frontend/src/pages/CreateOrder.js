@@ -165,30 +165,30 @@ const CreateOrder = () => {
 
   if (loading) {
     return (
-      <div className="create-order-container">
-        <div className="loading">Loading...</div>
+      <div className="create-order-container" role="main" aria-busy="true">
+        <div className="loading" role="status" aria-live="polite">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="create-order-container">
+    <div className="create-order-container" role="main" aria-label="Create new order page">
       <div className="create-order-header">
-        <h1>🛒 Create New Order</h1>
-        <button className="back-button" onClick={() => navigate('/recommendations')}>
+        <h1 id="page-heading"><span aria-hidden="true">🛒</span> Create New Order</h1>
+        <button className="back-button" onClick={() => navigate('/recommendations')} aria-label="Go back to recommendations page">
           Back
         </button>
       </div>
 
       {notification && (
-        <div className="notification-banner">
+        <div className="notification-banner" role="alert" aria-live="assertive">
           {notification}
         </div>
       )}
 
       <div className="order-content">
-        <div className="foods-section">
-          <h2>Available Foods</h2>
+        <div className="foods-section" role="region" aria-labelledby="available-foods-heading">
+          <h2 id="available-foods-heading">Available Foods</h2>
           <div className="search-box">
             <input
               type="text"
@@ -196,11 +196,12 @@ const CreateOrder = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
+              aria-label="Search for foods by name"
             />
           </div>
 
           {filteredFoods.length === 0 ? (
-            <p>No foods available for ordering.</p>
+            <p role="status">No foods available for ordering.</p>
           ) : (
             <div className="foods-list">
               {filteredFoods.map(food => (
@@ -216,6 +217,8 @@ const CreateOrder = () => {
                     className="add-button"
                     onClick={() => addToCart(food)}
                     disabled={cart[food.id]?.quantity >= food.amount}
+                    aria-label={cart[food.id]?.quantity >= food.amount ? `${food.foodName}, Price ${food.price} dollars, ${food.amount} units in stock${food.allergies && food.allergies.length > 0 ? `, Contains ${food.allergies.join(', ')}` : ''}, Maximum quantity reached` : `${food.foodName}, Price ${food.price} dollars, ${food.amount} units in stock${food.allergies && food.allergies.length > 0 ? `, Contains ${food.allergies.join(', ')}` : ''}, Add to cart`}
+                    aria-disabled={cart[food.id]?.quantity >= food.amount}
                   >
                     Add to Cart
                   </button>
@@ -225,8 +228,8 @@ const CreateOrder = () => {
           )}
         </div>
 
-        <div className="cart-section">
-          <h2>Your Cart</h2>
+        <div className="cart-section" role="region" aria-labelledby="cart-heading">
+          <h2 id="cart-heading">Your Cart</h2>
           
           <div className="order-name-input">
             <label htmlFor="orderName">Order Name:</label>
@@ -237,34 +240,39 @@ const CreateOrder = () => {
               value={orderName}
               onChange={(e) => setOrderName(e.target.value)}
               className="text-input"
+              aria-label="Enter a name for your order"
+              aria-required="true"
             />
           </div>
 
           {getTotalItems() === 0 ? (
-            <p className="empty-cart">Your cart is empty</p>
+            <p className="empty-cart" role="status">Your cart is empty</p>
           ) : (
             <>
-              <div className="cart-items">
+              <div className="cart-items" role="list" aria-label={`Cart contains ${getTotalItems()} items`}>
                 {Object.values(cart).map(item => (
-                  <div key={item.food.id} className="cart-item">
-                    <div className="cart-item-info">
+                  <div key={item.food.id} className="cart-item" role="listitem" aria-label={`${item.food.foodName}, ${item.quantity} items at ${item.food.price} dollars each, total ${item.food.price * item.quantity} dollars`}>
+                    <div className="cart-item-info" aria-hidden="true">
                       <h4>{item.food.foodName}</h4>
                       <p>
                         ${item.food.price} × {item.quantity} = ${item.food.price * item.quantity}
                       </p>
                     </div>
-                    <div className="cart-item-actions">
+                    <div className="cart-item-actions" role="group" aria-label={`Quantity controls for ${item.food.foodName}`}>
                       <button
                         className="quantity-button"
                         onClick={() => removeFromCart(item.food.id)}
+                        aria-label={`Decrease quantity of ${item.food.foodName}`}
                       >
                         -
                       </button>
-                      <span className="quantity">{item.quantity}</span>
+                      <span className="quantity" aria-label={`Quantity: ${item.quantity}`}>{item.quantity}</span>
                       <button
                         className="quantity-button"
                         onClick={() => addToCart(item.food)}
                         disabled={item.quantity >= item.food.amount}
+                        aria-label={item.quantity >= item.food.amount ? `Cannot increase, maximum stock reached for ${item.food.foodName}` : `Increase quantity of ${item.food.foodName}`}
+                        aria-disabled={item.quantity >= item.food.amount}
                       >
                         +
                       </button>
@@ -273,22 +281,25 @@ const CreateOrder = () => {
                 ))}
               </div>
 
-              <div className="cart-summary">
-                <div className="summary-row">
+              <div className="cart-summary" role="region" aria-labelledby="cart-summary-heading">
+                <h3 id="cart-summary-heading" className="sr-only">Order Summary</h3>
+                <div className="summary-row" aria-label={`Total items: ${getTotalItems()}`}>
                   <span>Total Items:</span>
                   <span>{getTotalItems()}</span>
                 </div>
-                <div className="summary-row total">
+                <div className="summary-row total" aria-label={`Total price: ${getTotalPrice()} dollars`}>
                   <span>Total Price:</span>
                   <span>${getTotalPrice()}</span>
                 </div>
               </div>
 
-              <div className="cart-actions">
+              <div className="cart-actions" role="group" aria-label="Cart actions">
                 <button
                   className="clear-button"
                   onClick={clearCart}
                   disabled={submitting}
+                  aria-label="Clear all items from cart"
+                  aria-disabled={submitting}
                 >
                   Clear Cart
                 </button>
@@ -296,6 +307,8 @@ const CreateOrder = () => {
                   className="submit-button"
                   onClick={handleSubmitOrder}
                   disabled={submitting || !orderName.trim()}
+                  aria-label={submitting ? 'Placing order, please wait' : !orderName.trim() ? 'Enter order name to place order' : 'Place order'}
+                  aria-disabled={submitting || !orderName.trim()}
                 >
                   {submitting ? 'Placing Order...' : 'Place Order'}
                 </button>
@@ -309,4 +322,3 @@ const CreateOrder = () => {
 };
 
 export default CreateOrder;
-
