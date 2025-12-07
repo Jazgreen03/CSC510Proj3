@@ -27,6 +27,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     private static final String[] HOT_KEYWORDS = { "hot", "warm", "steaming", "heat" };
     private static final String[] ASIAN_KEYWORDS = { "chinese", "japanese", "asian", "sushi", "ramen", "thai", "korean" };
     private static final String[] MEXICAN_KEYWORDS = { "mexican", "burrito", "taco", "salsa" };
+    private static final String[] ITALIAN_KEYWORDS = { "italian", "pasta", "pizza", "spaghetti", "lasagna" };
     private static final String[] SWEET_KEYWORDS = { "sweet", "dessert", "candy", "cake", "ice cream", "chocolate" };
     private static final String[] HEALTHY_KEYWORDS = { "healthy", "salad", "light", "clean", "nutrition" };
     private static final String[] PREMIUM_KEYWORDS = { "premium", "expensive", "fancy", "special", "best" };
@@ -38,7 +39,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     public List<FoodDto> filterFoodsWithContext(final String userMessage, final List<MessageDto> conversationHistory, final List<FoodDto> availableFoods) {
-        if (userMessage == null || userMessage.isBlank() || availableFoods == null) {
+        if (userMessage == null || userMessage.isBlank() || availableFoods == null || availableFoods.isEmpty()) {
             return availableFoods;
         }
 
@@ -58,39 +59,91 @@ public class RecommendationServiceImpl implements RecommendationService {
         }
         final String fullContext = (lower + " " + contextBuilder.toString()).toLowerCase();
 
+        // Start with some basic filters but don't be too restrictive
+        List<FoodDto> result = new ArrayList<>(filtered);
+        
+        System.out.println("DEBUG RecommendationService: Starting with " + result.size() + " foods");
+        System.out.println("DEBUG RecommendationService: User message: " + lower);
+        System.out.println("DEBUG RecommendationService: Full context: " + fullContext);
+        
         // Filter by dietary constraints (exclude if mentioned in current message or history)
         if (containsAny(fullContext, VEGETARIAN_KEYWORDS)) {
-            filterOut(filtered, "MEAT", "BEEF", "PORK", "POULTRY", "FISH", "SHELLFISH");
+            List<FoodDto> temp = new ArrayList<>(result);
+            filterOut(temp, "MEAT", "BEEF", "PORK", "POULTRY", "FISH", "SHELLFISH");
+            if (!temp.isEmpty()) result = temp;
+            System.out.println("DEBUG RecommendationService: After VEGETARIAN filter: " + result.size() + " foods");
         }
         if (containsAny(fullContext, VEGAN_KEYWORDS)) {
-            filterOut(filtered, "MEAT", "BEEF", "PORK", "POULTRY", "FISH", "SHELLFISH", "MILK", "DAIRY", "EGGS");
+            List<FoodDto> temp = new ArrayList<>(result);
+            filterOut(temp, "MEAT", "BEEF", "PORK", "POULTRY", "FISH", "SHELLFISH", "MILK", "DAIRY", "EGGS");
+            if (!temp.isEmpty()) result = temp;
+            System.out.println("DEBUG RecommendationService: After VEGAN filter: " + result.size() + " foods");
         }
 
-        // Filter by temperature preference (check current message first, then history)
+        // Filter by flavor preference (SPICY) - check full context
+        boolean hasSpicy = containsAny(fullContext, SPICY_KEYWORDS);
+        if (hasSpicy) {
+            List<FoodDto> spicyFoods = filterByTag(result, "SPICY");
+            System.out.println("DEBUG RecommendationService: Found " + spicyFoods.size() + " SPICY foods");
+            if (!spicyFoods.isEmpty()) {
+                result = spicyFoods;
+                System.out.println("DEBUG RecommendationService: After SPICY filter: " + result.size() + " foods");
+            }
+        }
+
+        // Filter by temperature preference (HOT_TEMP / COLD_TEMP)
+        // ONLY apply temperature filter if we don't have a flavor filter already,
+        // OR if temperature filter would further narrow down results
         if (containsAny(lower, COLD_KEYWORDS)) {
-            filtered.retainAll(filterByTag(filtered, "COLD"));
+            List<FoodDto> coldFoods = filterByTag(result, "COLD_TEMP");
+            System.out.println("DEBUG RecommendationService: Found " + coldFoods.size() + " COLD_TEMP foods from " + result.size());
+            if (!coldFoods.isEmpty()) {
+                result = coldFoods;
+                System.out.println("DEBUG RecommendationService: After COLD_TEMP filter: " + result.size() + " foods");
+            }
         } else if (containsAny(lower, HOT_KEYWORDS) || (containsAny(fullContext, HOT_KEYWORDS) && !containsAny(lower, COLD_KEYWORDS))) {
-            filtered.retainAll(filterByTag(filtered, "HOT"));
+            // Only narrow down by temperature if we already have spicy foods, or if no flavor specified
+            List<FoodDto> hotFoods = filterByTag(result, "HOT_TEMP");
+            System.out.println("DEBUG RecommendationService: Found " + hotFoods.size() + " HOT_TEMP foods from " + result.size());
+            if (!hotFoods.isEmpty()) {
+                result = hotFoods;
+                System.out.println("DEBUG RecommendationService: After HOT_TEMP filter: " + result.size() + " foods");
+            }
         }
 
         // Filter by cuisine (check full context to maintain preferences)
         if (containsAny(fullContext, ASIAN_KEYWORDS)) {
-            filtered.retainAll(filterByTag(filtered, "ASIAN", "JAPANESE"));
+            List<FoodDto> asianFoods = filterByTag(result, "ASIAN", "JAPANESE");
+            System.out.println("DEBUG RecommendationService: Found " + asianFoods.size() + " ASIAN foods");
+            if (!asianFoods.isEmpty()) result = asianFoods;
         }
         if (containsAny(fullContext, MEXICAN_KEYWORDS)) {
-            filtered.retainAll(filterByTag(filtered, "MEXICAN"));
+            List<FoodDto> mexicanFoods = filterByTag(result, "MEXICAN");
+            if (!mexicanFoods.isEmpty()) result = mexicanFoods;
+        }
+        if (containsAny(fullContext, ITALIAN_KEYWORDS)) {
+            List<FoodDto> italianFoods = filterByTag(result, "ITALIAN");
+            System.out.println("DEBUG RecommendationService: Found " + italianFoods.size() + " ITALIAN foods");
+            if (!italianFoods.isEmpty()) result = italianFoods;
         }
 
         // Filter by food type
         if (containsAny(lower, SWEET_KEYWORDS)) {
-            filtered.retainAll(filterByTag(filtered, "DESSERT", "SWEET"));
+            List<FoodDto> sweetFoods = filterByTag(result, "DESSERT", "SWEET");
+            if (!sweetFoods.isEmpty()) result = sweetFoods;
         }
         if (containsAny(lower, HEALTHY_KEYWORDS)) {
-            filtered.retainAll(filterByTag(filtered, "HEALTHY", "VEGAN", "VEGETARIAN"));
+            List<FoodDto> healthyFoods = filterByTag(result, "HEALTHY", "VEGAN", "VEGETARIAN");
+            if (!healthyFoods.isEmpty()) result = healthyFoods;
         }
 
-        // Return filtered list, or original if everything was filtered out (fallback)
-        return filtered.isEmpty() ? availableFoods : filtered;
+        System.out.println("DEBUG RecommendationService: Final result: " + result.size() + " foods");
+        if (!result.isEmpty()) {
+            System.out.println("DEBUG RecommendationService: Final foods: " + result.stream().map(FoodDto::getFoodName).reduce((a,b) -> a + ", " + b).orElse(""));
+        }
+
+        // Return filtered list, or fallback to original if filtering removed everything
+        return result.isEmpty() ? availableFoods : result;
     }
 
     @Override
