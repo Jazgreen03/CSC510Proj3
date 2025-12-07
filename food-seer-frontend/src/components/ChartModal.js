@@ -1,3 +1,5 @@
+import React from 'react';
+
 const ChartModal = ({ children, onClose }) => {
     return (
         <div className="chart-modal-overlay" onClick={onClose}>

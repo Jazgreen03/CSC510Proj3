@@ -69,10 +69,13 @@ public class ChatServiceImpl implements ChatService {
             final String userMsg = chatRequest.getMessage() == null ? "" : chatRequest.getMessage().toLowerCase();
             
             if (mode == null || mode.isBlank() || "auto".equalsIgnoreCase(mode)) {
-                // Auto-detect intent from user message
+                // Auto-detect intent from user message - be aggressive about detecting food requests
                 if (userMsg.contains("recommend") || userMsg.contains("suggest") || userMsg.contains("what should") || 
                     userMsg.contains("what would") || userMsg.contains("hungry") || userMsg.contains("eat") ||
-                    userMsg.contains("food") || userMsg.contains("meal")) {
+                    userMsg.contains("food") || userMsg.contains("meal") || userMsg.contains("want") ||
+                    userMsg.contains("get") || userMsg.contains("order") || userMsg.contains("chinese") ||
+                    userMsg.contains("vegetarian") || userMsg.contains("spicy") || userMsg.contains("hot") ||
+                    userMsg.contains("cold") || userMsg.contains("what about") || userMsg.contains("how about")) {
                     mode = "recommend";
                 } else {
                     mode = "freeform";
@@ -192,29 +195,52 @@ public class ChatServiceImpl implements ChatService {
                 Long matchedId = null;
                 String finalResponse = aiResponse;
                 
+                // Log the detected mode
+                System.out.println("DEBUG: Mode detected as: " + mode);
+                System.out.println("DEBUG: User message: " + userMsg);
+                
                 try {
-                    if ("recommend".equalsIgnoreCase(mode) && foods != null && !foods.isEmpty()) {
+                    // ALWAYS try to match a food when the user might be asking for recommendations
+                    // Check both the mode AND the user message for recommendation keywords
+                    boolean shouldRecommend = "recommend".equalsIgnoreCase(mode) || 
+                        userMsg.contains("want") || userMsg.contains("recommend") || 
+                        userMsg.contains("suggest") || userMsg.contains("hungry") ||
+                        userMsg.contains("meal") || userMsg.contains("food") ||
+                        userMsg.contains("spicy") || userMsg.contains("hot") ||
+                        userMsg.contains("chinese") || userMsg.contains("vegetarian") ||
+                        userMsg.contains("italian") || userMsg.contains("mexican") ||
+                        userMsg.contains("asian") || userMsg.contains("american") ||
+                        userMsg.contains("else") || userMsg.contains("another") || 
+                        userMsg.contains("different") || userMsg.contains("other") ||
+                        userMsg.contains("what about") || userMsg.contains("how about");
+                    
+                    if (shouldRecommend && foods != null && !foods.isEmpty()) {
+                        System.out.println("DEBUG: Attempting intelligent filtering (shouldRecommend=" + shouldRecommend + ", mode=" + mode + ")");
+                        System.out.println("DEBUG: Available foods: " + foods.size());
                         // Apply intelligent filtering based on user message AND conversation history for context
                         final java.util.List<FoodDto> filtered = recommendationService.filterFoodsWithContext(
                             userMsg, 
                             chatRequest.getHistory(), 
                             foods
                         );
+                        System.out.println("DEBUG: Filtered down to " + filtered.size() + " foods");
                         final FoodDto selected = recommendationService.selectBestRecommendation(filtered);
                         
                         if (selected != null) {
                             matchedId = selected.getId();
-                            // Use deterministic explanation instead of AI's potentially hallucinated response
-                            finalResponse = recommendationService.generateRecommendationExplanation(selected, userMsg);
-                            System.out.println("DEBUG: Intelligent recommendation selected: " + selected.getFoodName() + " (ID: " + matchedId + ")");
-                            System.out.println("DEBUG: Response: " + finalResponse);
+                            System.out.println("DEBUG: Matched food: " + selected.getFoodName() + " (ID: " + matchedId + ")");
+                            
+                            // OVERRIDE AI response with actual selected food to prevent hallucination
+                            finalResponse = generateDeterministicResponse(selected, userMsg);
+                            System.out.println("DEBUG: Generated deterministic response: " + finalResponse);
                         } else {
-                            System.out.println("DEBUG: No suitable recommendation found after filtering");
-                            finalResponse = "I apologize, but I don't have any items in our menu that match your request. Could you tell me more about what you're looking for?";
+                            System.out.println("DEBUG: No suitable food found after filtering");
                         }
+                    } else {
+                        System.out.println("DEBUG: Not attempting recommendation filtering. shouldRecommend=" + shouldRecommend + ", foods=" + (foods != null ? foods.size() : "null"));
                     }
                 } catch (final Exception e) {
-                    System.err.println("DEBUG: Error during intelligent recommendation: " + e.getMessage());
+                    System.err.println("DEBUG: Error during intelligent filtering: " + e.getMessage());
                     e.printStackTrace();
                 }
 
@@ -238,6 +264,61 @@ public class ChatServiceImpl implements ChatService {
             e.printStackTrace();
             return new ChatResponseDto("Error: " + e.getMessage(), null, false, null);
         }
+    }
+    
+    /**
+     * Generate a deterministic response that mentions the actual selected food
+     * to prevent AI hallucination of food names not in the database.
+     */
+    private String generateDeterministicResponse(final FoodDto food, final String userMessage) {
+        final StringBuilder response = new StringBuilder();
+        
+        // Start with an appropriate intro based on user message
+        if (userMessage.contains("spicy") || userMessage.contains("hot")) {
+            response.append("Okay! We have a delicious ");
+        } else if (userMessage.contains("want") || userMessage.contains("recommend")) {
+            response.append("Great! I recommend our ");
+        } else {
+            response.append("Perfect! Try our ");
+        }
+        
+        // Add the actual food name and price
+        response.append("**").append(food.getFoodName()).append("** ($").append(food.getPrice()).append(")");
+        
+        // Add contextual description based on tags
+        if (food.getTags() != null && !food.getTags().isEmpty()) {
+            response.append(". ");
+            
+            boolean hasSpicy = food.getTags().contains("SPICY");
+            boolean hasHot = food.getTags().contains("HOT");
+            boolean hasAsian = food.getTags().contains("ASIAN");
+            boolean hasHealthy = food.getTags().contains("HEALTHY");
+            boolean isVegetarian = food.getTags().contains("VEGETARIAN");
+            
+            if (hasSpicy && userMessage.contains("spicy")) {
+                response.append("It's got a nice spicy kick");
+            } else if (hasHot) {
+                response.append("It's a warm and hearty option");
+            } else {
+                response.append("It's a great choice");
+            }
+            
+            if (hasAsian) {
+                response.append(" with authentic Asian flavors");
+            }
+            
+            if (isVegetarian && userMessage.contains("vegetarian")) {
+                response.append(" and it's completely vegetarian");
+            }
+            
+            if (hasHealthy) {
+                response.append(" that's healthy too");
+            }
+            
+            response.append("!");
+        }
+        
+        return response.toString();
     }
 }
 
