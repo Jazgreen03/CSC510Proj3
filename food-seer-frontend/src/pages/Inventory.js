@@ -71,27 +71,27 @@ const Inventory = () => {
 
   if (loading) {
     return (
-      <div className="inventory-container">
-        <div className="loading">Loading inventory...</div>
+      <div className="inventory-container" role="main" aria-busy="true">
+        <div className="loading" role="status" aria-live="polite">Loading inventory...</div>
       </div>
     );
   }
 
   return (
-    <div className="inventory-container">
+    <div className="inventory-container" role="main" aria-labelledby="inventory-heading">
       <div className="inventory-header">
-        <h1>🏪 Food Inventory</h1>
-        <div className="header-actions">
-          <button className="nav-button" onClick={handleCreateOrder}>
+        <h1 id="inventory-heading"><span aria-hidden="true">🏪</span> Food Inventory</h1>
+        <div className="header-actions" role="group" aria-label="Navigation actions">
+          <button className="nav-button" onClick={handleCreateOrder} aria-label="Go to create order page">
             Create Order
           </button>
-          <button className="back-button" onClick={handleBack}>
+          <button className="back-button" onClick={handleBack} aria-label="Go back to recommendations page">
             Back to Recommendations
           </button>
         </div>
       </div>
 
-      <div className="inventory-controls">
+      <div className="inventory-controls" role="region" aria-label="Inventory filters and search">
         <div className="search-box">
           <input
             type="text"
@@ -99,15 +99,17 @@ const Inventory = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
+            aria-label="Search for food items by name"
           />
         </div>
 
-        <div className="filter-controls">
+        <div className="filter-controls" role="group" aria-label="Filter and sort options">
           <label className="filter-checkbox">
             <input
               type="checkbox"
               checked={filterInStock}
               onChange={(e) => setFilterInStock(e.target.checked)}
+              aria-label="Show only items in stock"
             />
             In Stock Only
           </label>
@@ -116,6 +118,7 @@ const Inventory = () => {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="sort-select"
+            aria-label="Sort food items by"
           >
             <option value="name">Sort by Name</option>
             <option value="price">Sort by Price</option>
@@ -124,25 +127,31 @@ const Inventory = () => {
         </div>
       </div>
 
-      <div className="inventory-stats">
-        <p>Showing {filteredFoods.length} of {foods.length} items</p>
+      <div className="inventory-stats" role="status" aria-live="polite" aria-atomic="true">
+        <p aria-label={`Showing ${filteredFoods.length} of ${foods.length} items`}>Showing {filteredFoods.length} of {foods.length} items</p>
       </div>
 
       {filteredFoods.length === 0 ? (
-        <div className="no-items">
+        <div className="no-items" role="status">
           <p>No foods found matching your criteria.</p>
         </div>
       ) : (
-        <div className="inventory-grid">
+        <div className="inventory-grid" role="list" aria-label={`${filteredFoods.length} food items`}>
           {filteredFoods.map((food) => (
-            <div key={food.id} className="inventory-card">
-              <div className="food-header">
+            <div 
+              key={food.id} 
+              className="inventory-card" 
+              role="listitem"
+              tabIndex={0}
+              aria-label={`${food.foodName}, Price ${food.price} dollars, ${food.amount} units available, ${food.amount > 0 ? 'In stock' : 'Out of stock'}${food.allergies && food.allergies.length > 0 ? `, Contains ${food.allergies.join(', ')}` : ''}`}
+            >
+              <div className="food-header" aria-hidden="true">
                 <h3>{food.foodName}</h3>
                 <span className={`stock-badge ${food.amount > 0 ? 'in-stock' : 'out-of-stock'}`}>
                   {food.amount > 0 ? 'In Stock' : 'Out of Stock'}
                 </span>
               </div>
-              <div className="food-info">
+              <div className="food-info" aria-hidden="true">
                 <div className="info-row">
                   <span className="info-label">Price:</span>
                   <span className="info-value">${food.price}</span>
@@ -169,4 +178,3 @@ const Inventory = () => {
 };
 
 export default Inventory;
-
