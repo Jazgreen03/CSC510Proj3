@@ -46,14 +46,14 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-container" role="main" aria-labelledby="app-title">
       <div className="login-card">
-        <div className="login-header">
-          <h1 className="app-title">🍽️ FoodSeer</h1>
+        <div className="login-header" role="banner">
+          <h1 className="app-title" id="app-title"><span aria-hidden="true">🍽️</span> FoodSeer</h1>
           <p className="app-subtitle">Find your perfect meal</p>
         </div>
         
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleSubmit} className="login-form" aria-labelledby="app-title">
           <div className="form-group">
             <label htmlFor="username">Username</label>
             <input
@@ -65,6 +65,8 @@ const Login = () => {
               placeholder="Enter your username"
               required
               autoComplete="username"
+              aria-required="true"
+              aria-label="Enter your username"
             />
           </div>
           
@@ -79,27 +81,31 @@ const Login = () => {
               placeholder="Enter your password"
               required
               autoComplete="current-password"
+              aria-required="true"
+              aria-label="Enter your password"
             />
           </div>
           
-          {successMessage && <div className="success-message">{successMessage}</div>}
-          {error && <div className="error-message">{error}</div>}
+          {successMessage && <div className="success-message" role="status" aria-live="polite">{successMessage}</div>}
+          {error && <div className="error-message" role="alert" aria-live="assertive">{error}</div>}
           
           <button 
             type="submit" 
             className="login-button"
             disabled={loading}
+            aria-label={loading ? 'Logging in, please wait' : 'Login to your account'}
+            aria-disabled={loading}
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
         
-        <div className="login-footer">
-          <p className="demo-info">
+        <div className="login-footer" role="contentinfo">
+          <p className="demo-info" aria-label="Demo credentials available: username admin, password admin123">
             Demo credentials: <strong>admin</strong> / <strong>admin123</strong>
           </p>
           <p className="register-link">
-            Don't have an account? <Link to="/register">Register here</Link>
+            Don't have an account? <Link to="/register" aria-label="Go to registration page">Register here</Link>
           </p>
         </div>
       </div>
@@ -108,4 +114,3 @@ const Login = () => {
 };
 
 export default Login;
-
