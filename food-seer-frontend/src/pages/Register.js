@@ -78,16 +78,16 @@ const Register = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h1 className="app-title">🍽️ FoodSeer</h1>
-          <p className="app-subtitle">Create your account</p>
+    <div className="login-container" aria-label="Registration page container" tabIndex="0">
+      <div className="login-card" aria-label="Registration form card" tabIndex="0">
+        <div className="login-header" aria-label="Registration header" tabIndex="0">
+          <h1 className="app-title" aria-label="FoodSeer application title" tabIndex="0">🍽️ FoodSeer</h1>
+          <p className="app-subtitle" aria-label="Registration subtitle" tabIndex="0">Create your account</p>
         </div>
         
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
+        <form onSubmit={handleSubmit} className="login-form" aria-label="Registration form" tabIndex="0">
+          <div className="form-group" aria-label="Username input group" tabIndex="0">
+            <label htmlFor="username" aria-label="Username label">Username</label>
             <input
               id="username"
               name="username"
@@ -97,11 +97,13 @@ const Register = () => {
               onChange={handleChange}
               placeholder="Choose a username"
               autoComplete="username"
+              aria-label="Username input field"
+              tabIndex="0"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
+          <div className="form-group" aria-label="Email input group" tabIndex="0">
+            <label htmlFor="email" aria-label="Email label">Email</label>
             <input
               id="email"
               name="email"
@@ -111,11 +113,13 @@ const Register = () => {
               onChange={handleChange}
               placeholder="Enter your email"
               autoComplete="email"
+              aria-label="Email input field"
+              tabIndex="0"
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          <div className="form-group" aria-label="Password input group" tabIndex="0">
+            <label htmlFor="password" aria-label="Password label">Password</label>
             <input
               id="password"
               name="password"
@@ -125,11 +129,13 @@ const Register = () => {
               onChange={handleChange}
               placeholder="Create a password (min 6 characters)"
               autoComplete="new-password"
+              aria-label="Password input field"
+              tabIndex="0"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+          <div className="form-group" aria-label="Confirm password input group" tabIndex="0">
+            <label htmlFor="confirmPassword" aria-label="Confirm password label">Confirm Password</label>
             <input
               id="confirmPassword"
               name="confirmPassword"
@@ -139,23 +145,27 @@ const Register = () => {
               onChange={handleChange}
               placeholder="Re-enter your password"
               autoComplete="new-password"
+              aria-label="Confirm password input field"
+              tabIndex="0"
             />
           </div>
           
-          {error && <div className="error-message">{error}</div>}
+          {error && <div className="error-message" aria-label={`Error message: ${error}`} tabIndex="0">{error}</div>}
           
           <button 
             type="submit" 
             className="login-button"
             disabled={loading}
+            aria-label={loading ? 'Creating account, please wait' : 'Register button'}
+            tabIndex="0"
           >
             {loading ? 'Creating Account...' : 'Register'}
           </button>
         </form>
         
-        <div className="login-footer">
-          <p className="register-link">
-            Already have an account? <Link to="/">Login here</Link>
+        <div className="login-footer" aria-label="Login link section" tabIndex="0">
+          <p className="register-link" aria-label="Already have an account message" tabIndex="0">
+            Already have an account? <Link to="/" aria-label="Link to login page" tabIndex="0">Login here</Link>
           </p>
         </div>
       </div>
@@ -164,4 +174,3 @@ const Register = () => {
 };
 
 export default Register;
-

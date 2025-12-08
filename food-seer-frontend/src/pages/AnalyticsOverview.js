@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCurrentUser, getAnalyticsOverview, getOrdersPerDay, getTopProducts, getPreferencesDistribution, getEngagement, getAllFoods, getAnalyticsSnapshot, getRecommendationRatingsAnalytics } from '../services/api';
+import { getCurrentUser, getAnalyticsOverview, getOrdersPerDay, getTopProducts, getPreferencesDistribution, getEngagement, getAllFoods, getAnalyticsSnapshot } from '../services/api';
 import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 import { Line, Bar, Pie } from 'react-chartjs-2';
@@ -43,7 +43,6 @@ const AnalyticsOverview = () => {
   // inventory will be normalized to an array of { foodName, amount, price? }
   const [inventory, setInventory] = useState([]);
   const [allergenCounts, setAllergenCounts] = useState({});
-  const [recommendationRatings, setRecommendationRatings] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState(null);
   const [daysWindow, setDaysWindow] = useState(30);
@@ -53,9 +52,6 @@ const AnalyticsOverview = () => {
   const costRef = React.useRef();
   const customersRef = React.useRef();
   const inventoryRef = React.useRef();
-  const topRatedFoodsRef = React.useRef();
-  const ratingDistributionRef = React.useRef();
-  const lowestRatedFoodsRef = React.useRef();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,18 +74,9 @@ const AnalyticsOverview = () => {
           getAnalyticsSnapshot(daysWindow),
         ]);
 
-        // Fetch recommendation ratings separately (it doesn't depend on daysWindow)
-        let recRatings = null;
-        try {
-          recRatings = await getRecommendationRatingsAnalytics();
-          console.log('Recommendation Ratings Data:', recRatings);
-        } catch (e) {
-          console.warn('Recommendation ratings analytics not available:', e);
-        }
-
         setOverview(ov);
 
-        // orders is object { '2025-11-01': 2, ... }
+  // orders is object { '2025-11-01': 2, ... }
         const labels = Object.keys(orders);
         const data = Object.values(orders);
         setOrdersSeries({ labels, data });
@@ -107,12 +94,10 @@ const AnalyticsOverview = () => {
           invList = Object.entries(snap.inventoryMap).map(([k, v]) => ({ foodName: k, amount: v }));
         }
         setInventory(invList || []);
-        // anomalies come from snapshot (if present)
-        setAnomalies((snap && snap.anomalies) ? snap.anomalies : []);
-        // allergen counts (tokenized) come from snapshot.preferences.allergenCounts when available
-        setAllergenCounts((snap && snap.preferences && snap.preferences.allergenCounts) ? snap.preferences.allergenCounts : {});
-        // recommendation ratings
-        setRecommendationRatings(recRatings);
+  // anomalies come from snapshot (if present)
+  setAnomalies((snap && snap.anomalies) ? snap.anomalies : []);
+  // allergen counts (tokenized) come from snapshot.preferences.allergenCounts when available
+  setAllergenCounts((snap && snap.preferences && snap.preferences.allergenCounts) ? snap.preferences.allergenCounts : {});
       } catch (error) {
         console.error('Error loading analytics:', error);
         navigate('/');
@@ -180,7 +165,7 @@ const AnalyticsOverview = () => {
 
   const costPrefData = preferences ? {
     labels: Object.keys(preferences.costPreference || {}),
-    datasets: [{ data: Object.values(preferences.costPreference || {}), backgroundColor: ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236'] }]
+    datasets: [{ data: Object.values(preferences.costPreference || {}), backgroundColor: ['#4dc9f6','#f67019','#f53794','#537bc4','#acc236'] }]
   } : null;
 
   // For dietary/allergen chart: prefer per-allergen counts coming from snapshot (allergenCounts)
@@ -188,43 +173,12 @@ const AnalyticsOverview = () => {
     const source = (allergenCounts && Object.keys(allergenCounts).length) ? allergenCounts : (preferences ? preferences.dietaryRestrictions : {});
     const labels = Object.keys(source || {});
     const data = Object.values(source || {});
-    return labels.length ? { labels, datasets: [{ data, backgroundColor: ['#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3'] }] } : null;
+    return labels.length ? { labels, datasets: [{ data, backgroundColor: ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3'] }] } : null;
   })();
 
   const topCustomersData = engagement ? {
     labels: Object.keys(engagement.topCustomers || {}),
     datasets: [{ label: 'Orders', data: Object.values(engagement.topCustomers || {}), backgroundColor: 'rgba(75,192,192,0.6)' }]
-  } : null;
-
-  // Recommendation ratings charts
-  const topRatedFoodsData = recommendationRatings && recommendationRatings.topRatedFoods ? {
-    labels: Object.keys(recommendationRatings.topRatedFoods || {}),
-    datasets: [{
-      label: 'Average Rating',
-      data: Object.values(recommendationRatings.topRatedFoods || {}),
-      backgroundColor: 'rgba(75, 192, 75, 0.6)',
-      borderColor: 'rgba(75, 192, 75, 1)',
-      borderWidth: 1
-    }]
-  } : null;
-
-  const ratingDistributionData = recommendationRatings && recommendationRatings.ratingDistribution ? {
-    labels: Object.keys(recommendationRatings.ratingDistribution || {}).map(k => `${k}★`),
-    datasets: [{
-      data: Object.values(recommendationRatings.ratingDistribution || {}),
-      backgroundColor: ['#ff6b6b', '#feca57', '#48dbfb', '#1dd1a1', '#5f27cd']
-    }]
-  } : null;
-
-  const lowestRatedFoodsData = recommendationRatings && recommendationRatings.lowestRatedFoods ? {
-    labels: Object.keys(recommendationRatings.lowestRatedFoods || {}),
-    datasets: [{
-      label: 'Average Rating',
-      data: Object.values(recommendationRatings.lowestRatedFoods || {}),
-      backgroundColor: 'rgba(255, 99, 99, 0.6)',
-      borderColor: 'rgba(255, 99, 99, 1)',
-      borderWidth: 1
-    }]
   } : null;
 
   const exportCsv = (labels, data, filename = 'chart.csv') => {
@@ -323,7 +277,7 @@ const AnalyticsOverview = () => {
 
       // Diet/allergies chart might not have a ref, render last: we used costRef for PNG earlier; if diet exists include it using costRef as fallback
       // finalize and save
-      const fileName = `analytics-${new Date().toISOString().slice(0, 10)}.pdf`;
+      const fileName = `analytics-${new Date().toISOString().slice(0,10)}.pdf`;
       doc.save(fileName);
     } catch (e) {
       console.error('downloadPdfAllCharts failed', e);
@@ -336,41 +290,41 @@ const AnalyticsOverview = () => {
       const zip = new JSZip();
       // Orders CSV
       if (ordersSeries && ordersSeries.labels) {
-        const rows = [['date', 'orders']].concat(ordersSeries.labels.map((l, i) => [l, ordersSeries.data[i]]));
-        zip.file('orders_per_day.csv', rows.map(r => r.join(',')).join('\n'));
+        const rows = [['date','orders']].concat(ordersSeries.labels.map((l,i)=>[l, ordersSeries.data[i]]));
+        zip.file('orders_per_day.csv', rows.map(r=>r.join(',')).join('\n'));
       }
       // Top products
       if (topProducts) {
-        const rows = [['product', 'count']].concat(Object.entries(topProducts).map(([k, v]) => [k, v]));
-        zip.file('top_products.csv', rows.map(r => '"' + r.join('","') + '"').join('\n'));
+        const rows = [['product','count']].concat(Object.entries(topProducts).map(([k,v])=>[k,v]));
+        zip.file('top_products.csv', rows.map(r=>'"'+r.join('","')+'"').join('\n'));
       }
       // Cost preference
       if (preferences && preferences.costPreference) {
-        const rows = [['costPreference', 'count']].concat(Object.entries(preferences.costPreference));
-        zip.file('cost_preferences.csv', rows.map(r => r.join(',')).join('\n'));
+        const rows = [['costPreference','count']].concat(Object.entries(preferences.costPreference));
+        zip.file('cost_preferences.csv', rows.map(r=>r.join(',')).join('\n'));
       }
       // Dietary restrictions / allergen counts: prefer tokenized allergenCounts if available
       const allergenSource = (allergenCounts && Object.keys(allergenCounts).length) ? allergenCounts : (preferences && preferences.dietaryRestrictions ? preferences.dietaryRestrictions : null);
       if (allergenSource) {
-        const rows = [['allergenOrRestriction', 'count']].concat(Object.entries(allergenSource));
-        zip.file('dietary_restrictions_or_allergens.csv', rows.map(r => r.join(',')).join('\n'));
+        const rows = [['allergenOrRestriction','count']].concat(Object.entries(allergenSource));
+        zip.file('dietary_restrictions_or_allergens.csv', rows.map(r=>r.join(',')).join('\n'));
       }
       // Top customers
       if (engagement && engagement.topCustomers) {
-        const rows = [['customer', 'orders']].concat(Object.entries(engagement.topCustomers));
-        zip.file('top_customers.csv', rows.map(r => r.join(',')).join('\n'));
+        const rows = [['customer','orders']].concat(Object.entries(engagement.topCustomers));
+        zip.file('top_customers.csv', rows.map(r=>r.join(',')).join('\n'));
       }
       // Inventory
       if (inventory && inventory.length) {
-        const rows = [['foodName', 'amount', 'price']].concat(inventory.map(f => [f.foodName, f.amount, f.price || '']));
-        zip.file('inventory.csv', rows.map(r => r.join(',')).join('\n'));
+        const rows = [['foodName','amount','price']].concat(inventory.map(f=>[f.foodName, f.amount, f.price || '']));
+        zip.file('inventory.csv', rows.map(r=>r.join(',')).join('\n'));
       }
 
       const content = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(content);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `analytics-csv-${new Date().toISOString().slice(0, 10)}.zip`;
+      a.download = `analytics-csv-${new Date().toISOString().slice(0,10)}.zip`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -386,7 +340,7 @@ const AnalyticsOverview = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `analytics-snapshot-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `analytics-snapshot-${new Date().toISOString().slice(0,10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -401,7 +355,7 @@ const AnalyticsOverview = () => {
         <h1>📈 Analytics & Insights</h1>
       </div>
 
-      <div className="dashboard-stats">
+  <div className="dashboard-stats">
         <div className="stat-card">
           <h3>Total Orders</h3>
           <p className="stat-number">{overview.totalOrders}</p>
@@ -422,18 +376,6 @@ const AnalyticsOverview = () => {
           <h3>Avg Order Value</h3>
           <p className="stat-number">${overview.avgOrderValue.toFixed(2)}</p>
         </div>
-        {recommendationRatings && (
-          <>
-            <div className="stat-card">
-              <h3>⭐ Avg Rating</h3>
-              <p className="stat-number">{recommendationRatings.overallAverageRating}/5.0</p>
-            </div>
-            <div className="stat-card">
-              <h3>📝 Total Reviews</h3>
-              <p className="stat-number">{recommendationRatings.totalFeedbackCount}</p>
-            </div>
-          </>
-        )}
       </div>
       <div style={{ maxWidth: 1200, margin: '8px auto' }}>
         <div className="stat-card" style={{ padding: 12 }}>
@@ -455,8 +397,8 @@ const AnalyticsOverview = () => {
       <div className="analytics-controls" style={{ maxWidth: 1200, margin: '10px auto' }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span>Window:</span>
-          {[7, 30, 90, 365].map(d => (
-            <button key={d} className={`nav-button ${daysWindow === d ? 'active' : ''}`} onClick={() => { setDaysWindow(d); setLoading(true); /** refetch */ window.requestAnimationFrame(() => { window.location.reload(); }) }}>
+          {[7,30,90,365].map(d => (
+            <button key={d} className={`nav-button ${daysWindow===d? 'active':''}`} onClick={() => { setDaysWindow(d); setLoading(true); /** refetch */ window.requestAnimationFrame(()=> { window.location.reload(); }) }}>
               {d}d
             </button>
           ))}
@@ -546,74 +488,15 @@ const AnalyticsOverview = () => {
           <div className="chart-header">
             <h3>Inventory Levels</h3>
             <div className="chart-toolbar">
-              <button className="btn-link" onClick={() => { setModalContent(inventory && inventory.length ? <Bar data={{ labels: inventory.map(f => f.foodName), datasets: [{ data: inventory.map(f => f.amount), backgroundColor: 'rgba(153,102,255,0.6)' }] }} options={zoomOptions} /> : <p>No inventory</p>); setModalOpen(true); }}>Maximize</button>
+              <button className="btn-link" onClick={() => { setModalContent(inventory && inventory.length ? <Bar data={{ labels: inventory.map(f=>f.foodName), datasets:[{data: inventory.map(f=>f.amount), backgroundColor:'rgba(153,102,255,0.6)'}] }} options={zoomOptions} /> : <p>No inventory</p>); setModalOpen(true); }}>Maximize</button>
               <button className="btn-link" onClick={() => exportPng(inventoryRef, 'inventory.png')}>PNG</button>
-              <button className="btn-link" onClick={() => inventory && exportCsv(inventory.map(f => f.foodName), inventory.map(f => f.amount), 'inventory.csv')}>CSV</button>
+              <button className="btn-link" onClick={() => inventory && exportCsv(inventory.map(f=>f.foodName), inventory.map(f=>f.amount), 'inventory.csv')}>CSV</button>
             </div>
           </div>
           <div className="chart-body small-chart">
-            {inventory && inventory.length ? <Bar ref={inventoryRef} data={{ labels: inventory.map(f => f.foodName), datasets: [{ label: 'Stock', data: inventory.map(f => f.amount), backgroundColor: 'rgba(153,102,255,0.6)' }] }} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p>No inventory data</p>}
+            {inventory && inventory.length ? <Bar ref={inventoryRef} data={{ labels: inventory.map(f=>f.foodName), datasets:[{label: 'Stock', data: inventory.map(f=>f.amount), backgroundColor:'rgba(153,102,255,0.6)'}] }} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p>No inventory data</p>}
           </div>
         </div>
-
-        {recommendationRatings && (
-          <>
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>⭐ Top Rated Foods</h3>
-                <div className="chart-toolbar">
-                  <button className="btn-link" onClick={() => { setModalContent(topRatedFoodsData ? <Bar data={topRatedFoodsData} options={zoomOptions} /> : <p>No data</p>); setModalOpen(true); }}>Maximize</button>
-                  <button className="btn-link" onClick={() => exportPng(topRatedFoodsRef, 'top-rated-foods.png')}>PNG</button>
-                  <button className="btn-link" onClick={() => topRatedFoodsData && exportCsv(topRatedFoodsData.labels, topRatedFoodsData.datasets[0].data, 'top-rated-foods.csv')}>CSV</button>
-                </div>
-              </div>
-              <div className="chart-body small-chart">
-                {topRatedFoodsData ? <Bar ref={topRatedFoodsRef} data={topRatedFoodsData} options={{ maintainAspectRatio: false, indexAxis: 'y', ...zoomOptions }} /> : <p>No rating data</p>}
-              </div>
-            </div>
-
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>📊 Rating Distribution</h3>
-                <div className="chart-toolbar">
-                  <button className="btn-link" onClick={() => { setModalContent(ratingDistributionData ? <Pie data={ratingDistributionData} options={zoomOptions} /> : <p>No data</p>); setModalOpen(true); }}>Maximize</button>
-                  <button className="btn-link" onClick={() => exportPng(ratingDistributionRef, 'rating-distribution.png')}>PNG</button>
-                  <button className="btn-link" onClick={() => ratingDistributionData && exportCsv(ratingDistributionData.labels, ratingDistributionData.datasets[0].data, 'rating-distribution.csv')}>CSV</button>
-                </div>
-              </div>
-              <div className="chart-body small-chart">
-                {ratingDistributionData ? <Pie ref={ratingDistributionRef} data={ratingDistributionData} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p>No distribution data</p>}
-              </div>
-            </div>
-
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>⚠️ Lowest Rated Foods</h3>
-                <div className="chart-toolbar">
-                  <button className="btn-link" onClick={() => { setModalContent(lowestRatedFoodsData ? <Bar data={lowestRatedFoodsData} options={zoomOptions} /> : <p>No data</p>); setModalOpen(true); }}>Maximize</button>
-                  <button className="btn-link" onClick={() => exportPng(lowestRatedFoodsRef, 'lowest-rated-foods.png')}>PNG</button>
-                  <button className="btn-link" onClick={() => lowestRatedFoodsData && exportCsv(lowestRatedFoodsData.labels, lowestRatedFoodsData.datasets[0].data, 'lowest-rated-foods.csv')}>CSV</button>
-                </div>
-              </div>
-              <div className="chart-body small-chart">
-                {lowestRatedFoodsData ? <Bar ref={lowestRatedFoodsRef} data={lowestRatedFoodsData} options={{ maintainAspectRatio: false, indexAxis: 'y', ...zoomOptions }} /> : <p>No rating data</p>}
-              </div>
-            </div>
-
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>📈 Feedback Count per Food</h3>
-                <div className="chart-toolbar">
-                  <button className="btn-link" onClick={() => { setModalContent(recommendationRatings.feedbackCountPerFood ? <Bar data={{ labels: Object.keys(recommendationRatings.feedbackCountPerFood || {}), datasets: [{ data: Object.values(recommendationRatings.feedbackCountPerFood || {}), backgroundColor: 'rgba(100,200,200,0.6)' }] }} options={zoomOptions} /> : <p>No data</p>); setModalOpen(true); }}>Maximize</button>
-                  <button className="btn-link" onClick={() => exportCsv(Object.keys(recommendationRatings.feedbackCountPerFood || {}), Object.values(recommendationRatings.feedbackCountPerFood || {}), 'feedback-count.csv')}>CSV</button>
-                </div>
-              </div>
-              <div className="chart-body small-chart">
-                {recommendationRatings.feedbackCountPerFood ? <Bar data={{ labels: Object.keys(recommendationRatings.feedbackCountPerFood || {}), datasets: [{ label: 'Reviews', data: Object.values(recommendationRatings.feedbackCountPerFood || {}), backgroundColor: 'rgba(100,200,200,0.6)' }] }} options={{ maintainAspectRatio: false, indexAxis: 'y', ...zoomOptions }} /> : <p>No feedback count data</p>}
-              </div>
-            </div>
-          </>
-        )}
       </div>
 
       {modalOpen && (

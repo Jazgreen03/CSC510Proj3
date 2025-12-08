@@ -127,18 +127,17 @@ function Preferences() {
 
   if (loading) {
     return (
-      <div className="App">
-        <div className="loading">Loading preferences...</div>
+      <div className="App" aria-label="Preferences page" tabIndex="0">
+        <div className="loading" aria-label="Loading user preferences" tabIndex="0">Loading preferences...</div>
       </div>
     );
   }
 
   return (
-    <div className="App">
+    <div className="App" aria-label="Preferences page" tabIndex="0">
       {renderCurrentStep()}
     </div>
   );
 }
 
 export default Preferences;
-

@@ -33,6 +33,7 @@ const Chatbot = () => {
 
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
   const [conversationStep, setConversationStep] = useState(0);
   const [userResponses, setUserResponses] = useState({
     mood: '',
@@ -65,10 +66,19 @@ const Chatbot = () => {
           const history = await getConversationHistory(user.id);
           if (history && history.length > 0) {
             // Convert from ConversationDto to message format
-            const messages = history.map(msg => ({
-              role: msg.role,
-              content: msg.messageContent
-            }));
+            // Filter out system prompts containing menu lists
+            const messages = history
+              .filter(msg => {
+                const content = msg.messageContent;
+                // Remove messages that contain full menu lists (have many food items listed)
+                const hasMenuList = content.includes('Available foods that match') || 
+                                   (content.includes('($') && content.split('($').length > 10); // Many prices = menu list
+                return !hasMenuList;
+              })
+              .map(msg => ({
+                role: msg.role,
+                content: msg.messageContent
+              }));
             setMessages(messages);
           }
         } catch (error) {
@@ -102,37 +112,16 @@ const Chatbot = () => {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    // Start with the initial greeting if no saved state
+    // Start with a single initial message if no saved state
     if (messages.length === 0 && stateLoaded && !hasInitialized.current) {
       hasInitialized.current = true;
+
+      // Use a static first question instead of calling backend
+      // This prevents triggering food recommendations on startup
       setMessages([{
         role: 'assistant',
-        content: INITIAL_GREETING
+        content: 'How are you feeling today?'
       }]);
-
-      // Generate and add the first dynamic question
-      const generateFirstQuestion = async () => {
-        try {
-          const userData = await getCurrentUser();
-          const firstQuestion = await generateNextQuestion([{
-            role: 'assistant',
-            content: INITIAL_GREETING
-          }], userData, { mood: '', hunger: '', preference: '' });
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: firstQuestion
-          }]);
-        } catch (error) {
-          console.error('Error generating first question:', error);
-          // Fallback
-          setMessages(prev => [...prev, {
-            role: 'assistant',
-            content: "How are you feeling today? (e.g., tired, energetic, stressed, happy)"
-          }]);
-        }
-      };
-
-      generateFirstQuestion();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateLoaded]);
@@ -412,7 +401,8 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
         }
       } else {
         // Free conversation mode - send raw user input to backend
-        const historyPayload = messages.map(m => ({ role: m.role, content: m.content }));
+        // Include current user message in history for context
+        const historyPayload = [...messages, userMessage].map(m => ({ role: m.role, content: m.content }));
         const aiResponse = await sendChatMessage({
           message: customQuestion,
           mode: 'auto', // Let backend decide based on content
@@ -534,26 +524,11 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
   };
 
   const handleStartOver = async () => {
+    // Start with just a simple greeting question (no backend call to avoid food recommendations)
     const newMessages = [{
       role: 'assistant',
-      content: INITIAL_GREETING
+      content: 'How are you feeling today?'
     }];
-
-    // Generate first question
-    try {
-      const userData = await getCurrentUser();
-      const firstQuestion = await generateNextQuestion(newMessages, userData, { mood: '', hunger: '', preference: '' });
-      newMessages.push({
-        role: 'assistant',
-        content: firstQuestion
-      });
-    } catch (error) {
-      console.error('Error generating first question:', error);
-      newMessages.push({
-        role: 'assistant',
-        content: "How are you feeling today? (e.g., tired, energetic, stressed, happy)"
-      });
-    }
 
     setIsLoading(true);
 
@@ -594,7 +569,19 @@ Format your response as: "I recommend [FOOD NAME]! [Explanation]"`;
       }
     }
 
+    // show confirmation toast
+    showToast('Conversation cleared');
+
     setIsLoading(false);
+  };
+
+  const showToast = (msg, duration = 3000) => {
+    try {
+      setToastMessage(msg);
+      window.setTimeout(() => setToastMessage(null), duration);
+    } catch (e) {
+      // ignore
+    }
   };
 
   const handleGetAnotherSuggestion = async () => {

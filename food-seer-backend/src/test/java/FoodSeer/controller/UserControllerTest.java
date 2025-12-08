@@ -37,6 +37,7 @@ import FoodSeer.dto.UserPreferencesDto;
 import FoodSeer.entity.User;
 import FoodSeer.repositories.ConversationRepository;
 import FoodSeer.repositories.OrderRepository;
+import FoodSeer.repositories.RecommendationFeedbackRepository;
 import FoodSeer.repositories.UserRepository;
 import FoodSeer.service.AuthService;
 import FoodSeer.service.UserService;
@@ -67,6 +68,9 @@ class UserControllerTest {
     @Autowired
     private ConversationRepository conversationRepository;
 
+    @Autowired
+    private RecommendationFeedbackRepository recommendationFeedbackRepository;
+
     private User testUser;
     private User adminUser;
 
@@ -84,6 +88,7 @@ class UserControllerTest {
     @AfterEach
     void cleanUp() {
         // Delete in proper order to avoid foreign key constraint violations
+        recommendationFeedbackRepository.deleteAll();
         conversationRepository.deleteAll();
         orderRepository.deleteAll();
         userRepository.deleteAll();
