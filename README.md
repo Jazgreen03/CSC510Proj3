@@ -8,7 +8,6 @@
 
 
 ![GitHub issues](https://img.shields.io/github/issues/Jazgreen03/CSC510Proj3)
-![GitHub closed issues](https://img.shields.io/github/issues-closed/Jazgreen03/CSC510Proj3)
 ![GitHub open pull requests](https://img.shields.io/github/issues-pr/Jazgreen03/CSC510Proj3)
 ![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/Jazgreen03/CSC510Proj3)
 
