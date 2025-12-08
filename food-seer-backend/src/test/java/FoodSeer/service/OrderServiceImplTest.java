@@ -27,6 +27,7 @@ import FoodSeer.repositories.ConversationRepository;
 import FoodSeer.repositories.FoodRepository;
 import FoodSeer.repositories.InventoryRepository;
 import FoodSeer.repositories.OrderRepository;
+import FoodSeer.repositories.RecommendationFeedbackRepository;
 import FoodSeer.repositories.UserRepository;
 
 /**
@@ -67,12 +68,17 @@ class OrderServiceImplTest {
     @Autowired
     private ConversationRepository conversationRepository;
 
+    /** Reference to RecommendationFeedback repository */
+    @Autowired
+    private RecommendationFeedbackRepository recommendationFeedbackRepository;
+
     /**
      * Clears all repositories before each test.
      */
     @BeforeEach
     public void setUp() throws Exception {
         // Delete in proper order to avoid foreign key constraint violations
+        recommendationFeedbackRepository.deleteAll();
         conversationRepository.deleteAll();
         orderRepository.deleteAll();
         foodRepository.deleteAll();

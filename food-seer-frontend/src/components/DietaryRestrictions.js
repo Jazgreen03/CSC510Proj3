@@ -63,50 +63,55 @@ const DietaryRestrictions = ({ restrictions, onUpdate, onNext, onPrevious, canGo
   };
 
   return (
-    <div className="quiz-container allergen-selection">
-      <div className="icon-container">
+    <div className="quiz-container allergen-selection" aria-label="Dietary restrictions selection" tabIndex="0">
+      <div className="icon-container" aria-label="Carrot icon" tabIndex="0">
         <div className="icon-carrot">🥕</div>
       </div>
       
-      <h1 className="question-title">Do you have any allergies or dietary restrictions?</h1>
-      <p className="question-subtitle">Select all that apply, or skip to see all options</p>
+      <h1 className="question-title" aria-label="Dietary restrictions question heading" tabIndex="0">Do you have any allergies or dietary restrictions?</h1>
+      <p className="question-subtitle" aria-label="Instructions for dietary restrictions" tabIndex="0">Select all that apply, or skip to see all options</p>
       
-      <div className="allergens-scroll-container">
-        <div className="allergens-selection-grid">
+      <div className="allergens-scroll-container" aria-label="Scrollable allergen options container" tabIndex="0">
+        <div className="allergens-selection-grid" aria-label="Allergen selection grid" tabIndex="0">
           {allergenOptions.map((option) => (
             <label
               key={option.value}
               className={`allergen-option ${selectedRestrictions.includes(option.value) ? 'selected' : ''}`}
+              aria-label={`${option.label} dietary restriction option`}
+              tabIndex="0"
             >
               <input
                 type="checkbox"
                 checked={selectedRestrictions.includes(option.value)}
                 onChange={() => handleRestrictionChange(option.value)}
+                aria-label={`Checkbox for ${option.label}`}
               />
-              <span>{option.label}</span>
+              <span aria-label={`${option.label} label`}>{option.label}</span>
             </label>
           ))}
         </div>
       </div>
 
       {selectedRestrictions.length > 0 && (
-        <div className="selected-restrictions-summary">
+        <div className="selected-restrictions-summary" aria-label="Selected dietary restrictions summary" tabIndex="0">
           <strong>Selected ({selectedRestrictions.length}):</strong> {selectedRestrictions.join(', ')}
         </div>
       )}
       
-      <div className="navigation">
-        <button className="previous-button" onClick={onPrevious}>
-          <span className="previous-icon">←</span>
+      <div className="navigation" aria-label="Navigation buttons" tabIndex="0">
+        <button className="previous-button" onClick={onPrevious} aria-label="Previous step button" tabIndex="0">
+          <span className="previous-icon" aria-label="Previous arrow">←</span>
           Previous
         </button>
         <button 
           className="next-button" 
           onClick={handleNext}
           disabled={!canGoNext}
+          aria-label="Finish and save preferences button"
+          tabIndex="0"
         >
           Finish
-          <span className="next-icon">✓</span>
+          <span className="next-icon" aria-label="Checkmark icon">✓</span>
         </button>
       </div>
     </div>

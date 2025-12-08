@@ -36,56 +36,64 @@ const AdminStats = () => {
   };
 
   if (loading) {
-    return <div className="admin-stats-container"><div className="loading">Loading stats...</div></div>;
+    return (
+      <div className="admin-stats-container" role="main" aria-busy="true">
+        <div className="loading" role="status" aria-live="polite">Loading stats...</div>
+      </div>
+    );
   }
 
   if (!stats) {
-    return <div className="admin-stats-container">No stats available.</div>;
+    return (
+      <div className="admin-stats-container" role="main">
+        <p role="status">No stats available.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="admin-stats-container">
+    <div className="admin-stats-container" role="main" aria-labelledby="admin-stats-heading">
       <div className="dashboard-header">
-        <h1>📊 Admin Statistics</h1>
-        <button className="back-button" onClick={handleBack}>Back</button>
+        <h1 id="admin-stats-heading"><span aria-hidden="true">📊</span> Admin Statistics</h1>
+        <button className="back-button" onClick={handleBack} aria-label="Go back to recommendations page">Back</button>
       </div>
 
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <h3>Total Orders</h3>
-          <p className="stat-number">{stats.totalOrders}</p>
+      <div className="dashboard-stats" role="region" aria-label="Statistics overview">
+        <div className="stat-card" role="article" tabIndex={0} aria-label={`Total orders: ${stats.totalOrders}`}>
+          <h3 id="total-orders-heading">Total Orders</h3>
+          <p className="stat-number" aria-labelledby="total-orders-heading">{stats.totalOrders}</p>
         </div>
-        <div className="stat-card">
-          <h3>Fulfilled Orders</h3>
-          <p className="stat-number">{stats.fulfilledOrders}</p>
+        <div className="stat-card" role="article" tabIndex={0} aria-label={`Fulfilled orders: ${stats.fulfilledOrders}`}>
+          <h3 id="fulfilled-orders-heading">Fulfilled Orders</h3>
+          <p className="stat-number" aria-labelledby="fulfilled-orders-heading">{stats.fulfilledOrders}</p>
         </div>
-        <div className="stat-card">
-          <h3>Unfulfilled Orders</h3>
-          <p className="stat-number">{stats.unfulfilledOrders}</p>
+        <div className="stat-card" role="article" tabIndex={0} aria-label={`Unfulfilled orders: ${stats.unfulfilledOrders}`}>
+          <h3 id="unfulfilled-orders-heading">Unfulfilled Orders</h3>
+          <p className="stat-number" aria-labelledby="unfulfilled-orders-heading">{stats.unfulfilledOrders}</p>
         </div>
-        <div className="stat-card">
-          <h3>Total Revenue</h3>
-          <p className="stat-number">${stats.totalRevenue}</p>
+        <div className="stat-card" role="article" tabIndex={0} aria-label={`Total revenue: ${stats.totalRevenue} dollars`}>
+          <h3 id="total-revenue-heading">Total Revenue</h3>
+          <p className="stat-number" aria-labelledby="total-revenue-heading">${stats.totalRevenue}</p>
         </div>
       </div>
 
-      <div className="top-products">
-        <h2>Top Products</h2>
+      <div className="top-products" role="region" aria-labelledby="top-products-heading">
+        <h2 id="top-products-heading">Top Products</h2>
         {(!stats.topProducts || Object.keys(stats.topProducts).length === 0) ? (
-          <p>No product data available.</p>
+          <p role="status">No product data available.</p>
         ) : (
-          <table className="top-products-table">
+          <table className="top-products-table" role="table" aria-label="Top products by order count">
             <thead>
               <tr>
-                <th>Product</th>
-                <th>Count</th>
+                <th scope="col">Product</th>
+                <th scope="col">Count</th>
               </tr>
             </thead>
             <tbody>
               {Object.entries(stats.topProducts).map(([name, count]) => (
                 <tr key={name}>
                   <td>{name}</td>
-                  <td>{count}</td>
+                  <td aria-label={`${count} orders`}>{count}</td>
                 </tr>
               ))}
             </tbody>

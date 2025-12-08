@@ -25,8 +25,11 @@ import FoodSeer.service.AnalyticsSnapshotService;
 import FoodSeer.entity.Food;
 import FoodSeer.entity.Order;
 import FoodSeer.entity.User;
+import FoodSeer.entity.RecommendationFeedback;
 import FoodSeer.repositories.UserRepository;
 import FoodSeer.repositories.OrderRepository;
+import FoodSeer.repositories.RecommendationFeedbackRepository;
+import java.util.DoubleSummaryStatistics;
 
 /**
  * Admin analytics endpoints for dashboard visualizations.
@@ -42,6 +45,8 @@ public class AdminAnalyticsController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RecommendationFeedbackRepository feedbackRepository;
 
     @Autowired
     private AnalyticsSnapshotService snapshotService;
@@ -192,6 +197,111 @@ public class AdminAnalyticsController {
     @GetMapping("/snapshot")
     public ResponseEntity<Map<String, Object>> snapshot(@RequestParam(name = "days", defaultValue = "30") final int days) {
         final Map<String, Object> out = snapshotService.buildSnapshot(days);
+        return ResponseEntity.ok(out);
+    }
+
+    /**
+     * Returns recommendation feedback analytics: top-rated foods, rating distribution, and quality insights.
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/recommendation-ratings")
+    public ResponseEntity<Map<String, Object>> recommendationRatings() {
+        final Map<String, Object> out = new LinkedHashMap<>();
+        
+        // Get all feedback
+        final List<RecommendationFeedback> allFeedback = feedbackRepository.findAll();
+        
+        if (allFeedback.isEmpty()) {
+            out.put("message", "No recommendation feedback yet");
+            return ResponseEntity.ok(out);
+        }
+        
+        // 1. Top-rated foods (by average rating)
+        final Map<String, DoubleSummaryStatistics> avgRatingByFood = allFeedback.stream()
+            .collect(Collectors.groupingBy(
+                RecommendationFeedback::getRecommendedFoodItem,
+                Collectors.summarizingDouble(f -> f.getRating())
+            ));
+        
+        final Map<String, Double> topRated = avgRatingByFood.entrySet().stream()
+            .filter(e -> e.getValue().getCount() > 0)  // only foods with feedback
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> Math.round(e.getValue().getAverage() * 100.0) / 100.0  // round to 2 decimals
+            ))
+            .entrySet().stream()
+            .sorted(Map.Entry.<String, Double>comparingByValue((a, b) -> b.compareTo(a)))
+            .limit(10)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (a, b) -> a,
+                LinkedHashMap::new
+            ));
+        
+        out.put("topRatedFoods", topRated);
+        
+        // 2. Rating distribution (count by rating level)
+        final Map<Integer, Long> ratingDistribution = allFeedback.stream()
+            .collect(Collectors.groupingBy(
+                RecommendationFeedback::getRating,
+                Collectors.counting()
+            ));
+        
+        // Ensure all 1-5 ratings are present (even if 0 count)
+        final Map<Integer, Long> fullDistribution = new LinkedHashMap<>();
+        for (int i = 5; i >= 1; i--) {
+            fullDistribution.put(i, ratingDistribution.getOrDefault(i, 0L));
+        }
+        out.put("ratingDistribution", fullDistribution);
+        
+        // 3. Overall average rating
+        final double overallAvg = allFeedback.stream()
+            .mapToDouble(RecommendationFeedback::getRating)
+            .average()
+            .orElse(0.0);
+        out.put("overallAverageRating", Math.round(overallAvg * 100.0) / 100.0);
+        
+        // 4. Total feedback count
+        out.put("totalFeedbackCount", allFeedback.size());
+        
+        // 5. Lowest-rated foods (quality concerns)
+        final Map<String, Double> lowestRated = avgRatingByFood.entrySet().stream()
+            .filter(e -> e.getValue().getCount() > 0)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e -> Math.round(e.getValue().getAverage() * 100.0) / 100.0
+            ))
+            .entrySet().stream()
+            .sorted(Map.Entry.<String, Double>comparingByValue())
+            .limit(5)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (a, b) -> a,
+                LinkedHashMap::new
+            ));
+        
+        out.put("lowestRatedFoods", lowestRated);
+        
+        // 6. Feedback count per food (to see how many reviews each has)
+        final Map<String, Long> feedbackCountByFood = allFeedback.stream()
+            .collect(Collectors.groupingBy(
+                RecommendationFeedback::getRecommendedFoodItem,
+                Collectors.counting()
+            ))
+            .entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue((a, b) -> b.compareTo(a)))
+            .limit(10)
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (a, b) -> a,
+                LinkedHashMap::new
+            ));
+        
+        out.put("feedbackCountPerFood", feedbackCountByFood);
+        
         return ResponseEntity.ok(out);
     }
 

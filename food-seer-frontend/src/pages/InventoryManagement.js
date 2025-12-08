@@ -161,45 +161,45 @@ const InventoryManagement = () => {
 
   if (loading) {
     return (
-      <div className="admin-dashboard-container">
-        <div className="loading">Loading dashboard...</div>
+      <div className="admin-dashboard-container" role="main" aria-busy="true">
+        <div className="loading" role="status" aria-live="polite">Loading dashboard...</div>
       </div>
     );
   }
 
   return (
-    <div className="admin-dashboard-container">
+    <div className="admin-dashboard-container" role="main" aria-labelledby="inventory-mgmt-heading">
       <div className="dashboard-header">
-        <h1>📦 Inventory Management</h1>
-        <div className="header-actions">
-          <button className="add-button" onClick={() => setShowAddForm(!showAddForm)}>
+        <h1 id="inventory-mgmt-heading"><span aria-hidden="true">📦</span> Inventory Management</h1>
+        <div className="header-actions" role="group" aria-label="Header actions">
+          <button className="add-button" onClick={() => setShowAddForm(!showAddForm)} aria-label={showAddForm ? 'Cancel adding food' : 'Add new food item'} aria-expanded={showAddForm}>
             {showAddForm ? 'Cancel' : '+ Add Food'}
           </button>
-          <button className="back-button" onClick={handleBack}>
+          <button className="back-button" onClick={handleBack} aria-label="Go back to order management">
             Back
           </button>
         </div>
       </div>
 
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <h3>Total Foods</h3>
-          <p className="stat-number">{foods.length}</p>
+      <div className="dashboard-stats" role="region" aria-label="Inventory statistics">
+        <div className="stat-card" role="article" tabIndex={0} aria-label={`Total foods: ${foods.length}`}>
+          <h3 id="total-foods-stat">Total Foods</h3>
+          <p className="stat-number" aria-labelledby="total-foods-stat">{foods.length}</p>
         </div>
-        <div className="stat-card">
-          <h3>In Stock</h3>
-          <p className="stat-number">{foods.filter(f => f.amount > 0).length}</p>
+        <div className="stat-card" role="article" tabIndex={0} aria-label={`In stock: ${foods.filter(f => f.amount > 0).length} items`}>
+          <h3 id="in-stock-stat">In Stock</h3>
+          <p className="stat-number" aria-labelledby="in-stock-stat">{foods.filter(f => f.amount > 0).length}</p>
         </div>
-        <div className="stat-card">
-          <h3>Out of Stock</h3>
-          <p className="stat-number">{foods.filter(f => f.amount === 0).length}</p>
+        <div className="stat-card" role="article" tabIndex={0} aria-label={`Out of stock: ${foods.filter(f => f.amount === 0).length} items`}>
+          <h3 id="out-of-stock-stat">Out of Stock</h3>
+          <p className="stat-number" aria-labelledby="out-of-stock-stat">{foods.filter(f => f.amount === 0).length}</p>
         </div>
       </div>
 
       {showAddForm && (
-        <div className="food-form-container">
-          <h2>{editingFood ? 'Edit Food' : 'Add New Food'}</h2>
-          <form onSubmit={editingFood ? handleUpdateFood : handleAddFood} className="food-form">
+        <div className="food-form-container" role="region" aria-labelledby="form-heading">
+          <h2 id="form-heading">{editingFood ? 'Edit Food' : 'Add New Food'}</h2>
+          <form onSubmit={editingFood ? handleUpdateFood : handleAddFood} className="food-form" aria-label={editingFood ? 'Edit food form' : 'Add new food form'}>
             <div className="form-group">
               <label htmlFor="foodName">Food Name *</label>
               <input
@@ -210,6 +210,8 @@ const InventoryManagement = () => {
                 onChange={handleInputChange}
                 required
                 placeholder="Enter food name"
+                aria-required="true"
+                aria-label="Food name, required"
               />
             </div>
 
@@ -225,6 +227,8 @@ const InventoryManagement = () => {
                   required
                   min="0"
                   placeholder="Stock amount"
+                  aria-required="true"
+                  aria-label="Stock amount, required"
                 />
               </div>
 
@@ -239,36 +243,39 @@ const InventoryManagement = () => {
                   required
                   min="0"
                   placeholder="Price"
+                  aria-required="true"
+                  aria-label="Price in dollars, required"
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Allergens (select all that apply)</label>
-              <div className="allergens-grid">
+              <label id="allergens-label">Allergens (select all that apply)</label>
+              <div className="allergens-grid" role="group" aria-labelledby="allergens-label">
                 {ALLERGEN_OPTIONS.map(allergen => (
                   <label key={allergen} className="allergen-checkbox">
                     <input
                       type="checkbox"
                       checked={formData.allergies.includes(allergen)}
                       onChange={() => handleAllergyToggle(allergen)}
+                      aria-label={`Select ${allergen} allergen`}
                     />
                     <span>{allergen}</span>
                   </label>
                 ))}
               </div>
               {formData.allergies.length > 0 && (
-                <div className="selected-allergies">
+                <div className="selected-allergies" role="status" aria-live="polite" aria-label={`Selected allergens: ${formData.allergies.join(', ')}`}>
                   Selected: {formData.allergies.join(', ')}
                 </div>
               )}
             </div>
 
-            <div className="form-actions">
-              <button type="button" className="cancel-button" onClick={resetForm}>
+            <div className="form-actions" role="group" aria-label="Form actions">
+              <button type="button" className="cancel-button" onClick={resetForm} aria-label="Cancel and close form">
                 Cancel
               </button>
-              <button type="submit" className="submit-button">
+              <button type="submit" className="submit-button" aria-label={editingFood ? 'Update food item' : 'Add food item'}>
                 {editingFood ? 'Update Food' : 'Add Food'}
               </button>
             </div>
@@ -276,20 +283,20 @@ const InventoryManagement = () => {
         </div>
       )}
 
-      <div className="foods-table-container">
-        <h2>Food Inventory</h2>
+      <div className="foods-table-container" role="region" aria-labelledby="inventory-table-heading">
+        <h2 id="inventory-table-heading">Food Inventory</h2>
         {foods.length === 0 ? (
-          <p>No foods in inventory. Add some to get started!</p>
+          <p role="status">No foods in inventory. Add some to get started!</p>
         ) : (
-          <table className="foods-table">
+          <table className="foods-table" role="table" aria-label="Food inventory table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Allergies</th>
-                <th>Actions</th>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Price</th>
+                <th scope="col">Stock</th>
+                <th scope="col">Allergies</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -297,23 +304,25 @@ const InventoryManagement = () => {
                 <tr key={food.id}>
                   <td>{food.id}</td>
                   <td>{food.foodName}</td>
-                  <td>${food.price}</td>
+                  <td aria-label={`${food.price} dollars`}>${food.price}</td>
                   <td>
-                    <span className={food.amount > 0 ? 'stock-positive' : 'stock-zero'}>
+                    <span className={food.amount > 0 ? 'stock-positive' : 'stock-zero'} aria-label={`${food.amount} units ${food.amount > 0 ? 'in stock' : 'out of stock'}`}>
                       {food.amount}
                     </span>
                   </td>
-                  <td>{food.allergies && food.allergies.length > 0 ? food.allergies.join(', ') : 'None'}</td>
+                  <td aria-label={food.allergies && food.allergies.length > 0 ? `Contains allergens: ${food.allergies.join(', ')}` : 'No allergens'}>{food.allergies && food.allergies.length > 0 ? food.allergies.join(', ') : 'None'}</td>
                   <td className="actions-cell">
                     <button
                       className="edit-button"
                       onClick={() => handleEditFood(food)}
+                      aria-label={`Edit ${food.foodName}`}
                     >
                       Edit
                     </button>
                     <button
                       className="delete-button"
                       onClick={() => handleDeleteFood(food.id, food.foodName)}
+                      aria-label={`Delete ${food.foodName}`}
                     >
                       Delete
                     </button>
@@ -329,4 +338,3 @@ const InventoryManagement = () => {
 };
 
 export default InventoryManagement;
-
