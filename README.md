@@ -157,26 +157,26 @@ Our automated test suites are fully integrated with GitHub Actions workflows to 
 
 ## 🌐 Future Scope
 
-We're excited about the enhancements coming to Food Seer! Here's what's next:
+We're excited about the enhancements coming to Food Seer! Here's what's next for delivering full functionality and a seamless user experience:
 
-- **Chat-Bot Memory & History**  
-  Allow the AI to retain past conversations, preferences, and recommendations — creating a truly personalized dining assistant that learns over time.
+- **Advanced Dietary & Allergy Personalization**  
+  Integrate user-specific dietary preferences, allergies, and nutritional goals to tailor recommendations accurately and safely, ensuring each suggestion aligns with individual health needs.
 
-- **Recommendation Feedback & Improvement Loop**  
-  Enable rating and review features for each recommendation, helping the system continuously refine and improve food suggestions.
+- **Dynamic Menu & Seasonal Adaptation**  
+  Implement a system that automatically updates recommendations based on seasonal ingredients, restaurant menu changes, and trending dishes — keeping suggestions fresh, relevant, and timely.
 
-- **Analytics & Insights Dashboard**  
-  Introduce a business-facing analytics suite that visualizes customer preferences, order trends, and engagement insights to support smarter restaurant decisions.
+- **Multi-Platform Integration**  
+  Extend Food Seer’s accessibility by integrating with popular messaging apps, voice assistants, and restaurant ordering platforms, allowing seamless user interaction across devices and channels.
 
-- **Voice-Enabled Chat Experience**  
-  Add speech-to-text and text-to-speech so users can talk to the chatbot like a real waiter and receive spoken, natural meal recommendations — making the experience hands-free and more conversational.
+- **Predictive Recommendation Engine**  
+  Leverage AI to anticipate user cravings and preferences using historical interactions, contextual data, and predictive modeling — offering proactive, highly personalized dining suggestions before the user even asks.
+
 
 ---
 
 ## 🙌 Contributors
 A heartfelt thank you to our contributors who made this project possible:
-
-**Group #5**
+Group #5:
 
 Aayushi Masurekar, Anusha Upadhyay, 
 Chandhrakkamala, Jazmin Green, Rujuta Palimkar
