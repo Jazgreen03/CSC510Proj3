@@ -2,60 +2,35 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17850343.svg)](https://doi.org/10.5281/zenodo.17850343)
 [![License](https://img.shields.io/github/license/NovaCorz/CSC510)](https://github.com/NovaCorz/CSC510/blob/main/LICENSE)
-[![Rubric](https://img.shields.io/badge/Rubric-View-blue)](./RUBRIC.md)
-[![GitHub Release](https://img.shields.io/github/release/NovaCorz/CSC510.svg)](https://github.com/NovaCorz/CSC510/releases)
+[![GitHub Release](https://img.shields.io/badge/release-V.2.0-blue)](https://github.com/Jazgreen03/CSC510Proj3/releases/tag/V.2.0)
 [![codecov](https://codecov.io/gh/NovaCorz/CSC510/branch/main/graph/badge.svg)](https://codecov.io/gh/NovaCorz/CSC510)
-[![Build main](https://github.com/NovaCorz/CSC510/actions/workflows/run-tests.yml/badge.svg)](https://github.com/NovaCorz/CSC510/actions/workflows/run-tests.yml)
-[![Open Issues](https://img.shields.io/github/issues/NovaCorz/CSC510)](https://github.com/NovaCorz/CSC510/issues)
-[![Closed Issues](https://img.shields.io/github/issues-closed/NovaCorz/CSC510?color=green)](https://github.com/NovaCorz/CSC510/issues?q=is%3Aissue+is%3Aclosed)
-[![Pull Requests](https://img.shields.io/github/issues-pr/NovaCorz/CSC510)](https://github.com/NovaCorz/CSC510/pulls)
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/NovaCorz/CSC510/main) 
-![GitHub code size in bytes](https://img.shields.io/github/repo-size/NovaCorz/CSC510)
-[![Code style: google java](https://img.shields.io/badge/code_style-google_java-blue)](https://google.github.io/styleguide/javaguide.html)
-[![linting: checkstyle](https://img.shields.io/badge/linting-checkstyle-purple)](https://checkstyle.sourceforge.io/)
+
+![GitHub issues](https://img.shields.io/github/issues/Jazgreen03/CSC510Proj3)
+![GitHub closed issues](https://img.shields.io/github/issues-closed/Jazgreen03/CSC510Proj3)
+![GitHub open pull requests](https://img.shields.io/github/issues-pr/Jazgreen03/CSC510Proj3)
+![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/Jazgreen03/CSC510Proj3)
 
 ---
 
-## 🎉 Welcome to Food Seer!
-
-**Food Seer** takes the stress out of choosing what to eat by turning meal selection into a smart and personalized experience. Whether you're in the mood for a quick quiz or a natural conversation, Food Seer helps you find the perfect meal based on your preferences, mood, and budget. Start a short quiz or chat with our AI assistant — and receive a tailored meal suggestion in seconds.
-
-**VIDEO**
-
-[▶️ Watch the Demo Video](https://github.com/NovaCorz/CSC510/blob/main/doc/DEMO.mkv)
-
----
-
-## Table of Contents
-
-- [💡 Why This Project?](#-why-this-project)
-- [📈 Use Case](#-use-case)
-- [🚀 Key Features](#-key-features)
-- [Technology Stack](#technology-stack)
-- [🔧 Installation](#-installation)
-- [🎥 Demo Video](#-demo-video)
-- [📊 Project Poster](#-project-poster)
-- [📚 Case Studies](#-case-studies)
-- [🎓 Academic Paper Guidance](#-academic-paper-guidance)
-- [🤝 Contribution Guidelines](#-contribution-guidelines)
-- [📈 Code Coverage](#-code-coverage)
-- [🌐 Future Scope](#-future-scope)
-- [🙌 Contributors](#-contributors)
-- [🙏 Acknowledgements](#-acknowledgements)
-- [💡 Feedback](#-feedback)
-- [🏛️ Governance Model](#governance-model)
-- [🔔 Notifications](#-notifications)
-- [📅 Roadmap & Funding Information](#-roadmap--funding-information)
-- [🌟 Success Stories](#-success-stories)
-- [📎 Recommended Citation](#-recommended-citation)
-- [⚠️ Disclaimer](#️-disclaimer)
-
----
-
-## 💡 Why This Project?
+💡 Why This Project?
 
 Menu overload is real — and decision fatigue hits hard when you're hungry. Food Seer eliminates the guesswork by guiding users toward a meal that fits their lifestyle and cravings without the hassle of scrolling through endless options.
 
+We built Food Seer to:
+
+✅ Reduce menu fatigue and decision stress
+
+🤖 Provide personalized suggestions via AI chat
+
+❓ Offer a quiz-based food recommendation system
+
+🛒 Streamline ordering into a simple “choose and order” flow
+
+🧾 Empower staff with inventory, user, and order management tools
+
+♿ Ensure accessibility for users with disabilities, following ADA guidelines
+
+Food Seer bridges AI-driven personalization with restaurant efficiency — improving both customer experience and backend operations.
 We built Food Seer to:
 
 - ✅ Reduce menu fatigue and decision stress  
@@ -65,7 +40,6 @@ We built Food Seer to:
 - 🧾 Empower staff with inventory, user, and order management tools  
 
 Food Seer bridges **AI-driven personalization** with **restaurant efficiency** — improving both customer experience and backend operations.
-
 ---
 
 ## 📈 Use Case
@@ -85,7 +59,7 @@ Food Seer transforms meal choices from a chore into a simple, enjoyable interact
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features + New Features
 
 - **Interactive Quiz System** to generate meal recommendations  
 - **Ollama-powered AI chatbot** for conversational food suggestions  
@@ -112,10 +86,9 @@ Food Seer transforms meal choices from a chore into a simple, enjoyable interact
 
 To set up the project locally, follow these steps.
 
-
 **Clone the Repository:**
 ```bash
-git clone https://github.com/NovaCorz/CSC510.git
+git clone [https://github.com/NovaCorz/CSC510.git](https://github.com/Jazgreen03/CSC510Proj3.git)
 cd CSC510
 ```
 Choose Your Installation Method. Detailed instructions are available in [INSTALL.md](INSTALL.md).
@@ -200,13 +173,10 @@ We're excited about the enhancements coming to Food Seer! Here's what's next:
 ## 🙌 Contributors
 A heartfelt thank you to our contributors who made this project possible:
 
-**Group #13**
+**Group #5**
 
-- [Justin Kuethe](https://github.com/NovaCorz) - jrkuethe  
-- [Chase Goins](https://github.com/jcgoins2) - jcgoins2  
-- [Andrew Parr](https://github.com/afluffybunny15) - aaparr  
-- [Mukul Sauhta](https://github.com/muksaw) - msauhta2  
-
+Aayushi Masurekar, Anusha Upadhyay, 
+Chandhrakkamala, Jazmin Green, Rujuta Palimkar
 ---
 
 ## 🙏 Acknowledgements
@@ -277,28 +247,6 @@ During these early trials, users reported that Food Seer:
 
 ---
 
-## 📎 Recommended Citation
-
-If you use Food Seer in academic work, research, or presentations, please cite our project as follows:
-
-**APA Format**
-> Kuethe, J., Goins, C., Parr, A., & Sauhta, M. (2025). *Food Seer: Smart Meal Recommendation System*. GitHub Repository. https://github.com/NovaCorz/CSC510
-
-**BibTeX**
-```bibtex
-@software{foodseer2025,
-  author       = {Kuethe, Justin and Goins, Chase and Parr, Andrew and Sauhta, Mukul},
-  title        = {Food Seer: Smart Meal Recommendation System},
-  year         = {2025},
-  publisher    = {GitHub},
-  url          = {https://github.com/NovaCorz/CSC510},
-}
-```
-
----
-
-## 📋 Project Rubric
-See the full evaluation criteria in the [RUBRIC.md](./RUBRIC.md).
-
 ## ⚠️ Disclaimer
-Food Seer is designed as a smart recommendation system for restaurant delivery services. All meal recommendations are suggestions based on user input and preferences. Individual dietary needs, allergies, and health conditions should always be considered when making food choices. We are not responsible for any adverse reactions or health issues that may arise from following our recommendations.
+Food Seer is designed as a smart recommendation system for restaurant delivery services. All meal recommendations are suggestions based on user input and preferences. Individual dietary needs, allergies, and health conditions should always be considered when making food choices. We are not responsible for any adverse reactions. My team names are: Group 5- Aayushi Masurekar, Anusha Upadhyay, 
+Chandhrakkamala, Jazmin Green, Rujuta Palimkar
