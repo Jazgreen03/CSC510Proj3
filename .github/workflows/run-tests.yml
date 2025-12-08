@@ -2,9 +2,9 @@ name: Build & Test FoodSeer
 
 on:
   push:
-    branches: ['**']
+    branches: ['main', 'feature/**']
   pull_request:
-    branches: ['**']
+    branches: ['main', 'feature/**']
 
 permissions:
   contents: read
