@@ -10,14 +10,14 @@ const createHeaders = (includeAuth = true) => {
   const headers = {
     'Content-Type': 'application/json',
   };
-  
+
   if (includeAuth) {
     const token = getAuthToken();
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
   }
-  
+
   return headers;
 };
 
@@ -29,19 +29,19 @@ export const login = async (username, password) => {
       headers: createHeaders(false),
       body: JSON.stringify({ username, password }),
     });
-    
+
     if (!response.ok) {
       throw new Error('Login failed');
     }
-    
+
     const data = await response.json();
-    
+
     // Store token in localStorage
     if (data.accessToken) {
       localStorage.setItem('token', data.accessToken);
       localStorage.setItem('username', username);
     }
-    
+
     return data;
   } catch (error) {
     console.error('Login error:', error);
@@ -56,11 +56,11 @@ export const register = async (username, email, password) => {
       headers: createHeaders(false),
       body: JSON.stringify({ username, email, password }),
     });
-    
+
     if (!response.ok) {
       throw new Error('Registration failed');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Registration error:', error);
@@ -80,11 +80,11 @@ export const getCurrentUser = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch user');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get current user error:', error);
@@ -99,11 +99,11 @@ export const updateUserPreferences = async (costPreference, dietaryRestrictions)
       headers: createHeaders(true),
       body: JSON.stringify({ costPreference, dietaryRestrictions }),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to update preferences');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Update preferences error:', error);
@@ -123,11 +123,11 @@ export const getAllFoods = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch foods');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get all foods error:', error);
@@ -141,11 +141,11 @@ export const getFoodById = async (id) => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch food');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get food by id error:', error);
@@ -160,11 +160,11 @@ export const createFood = async (foodData) => {
       headers: createHeaders(true),
       body: JSON.stringify(foodData),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to create food');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Create food error:', error);
@@ -179,11 +179,11 @@ export const updateFood = async (foodData) => {
       headers: createHeaders(true),
       body: JSON.stringify(foodData),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to update food');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Update food error:', error);
@@ -197,7 +197,7 @@ export const deleteFood = async (id) => {
       method: 'DELETE',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       if (response.status === 409) {
@@ -206,7 +206,7 @@ export const deleteFood = async (id) => {
       }
       throw new Error('Failed to delete food');
     }
-    
+
     return await response.text();
   } catch (error) {
     console.error('Delete food error:', error);
@@ -221,11 +221,11 @@ export const getInventory = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch inventory');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get inventory error:', error);
@@ -240,11 +240,11 @@ export const updateInventory = async (inventoryData) => {
       headers: createHeaders(true),
       body: JSON.stringify(inventoryData),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to update inventory');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Update inventory error:', error);
@@ -259,11 +259,11 @@ export const getAllOrders = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch orders');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get all orders error:', error);
@@ -277,11 +277,11 @@ export const getMyOrders = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch my orders');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get my orders error:', error);
@@ -295,11 +295,11 @@ export const getFulfilledOrders = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch fulfilled orders');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get fulfilled orders error:', error);
@@ -313,11 +313,11 @@ export const getUnfulfilledOrders = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch unfulfilled orders');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get unfulfilled orders error:', error);
@@ -331,11 +331,11 @@ export const getOrderById = async (id) => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch order');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get order by id error:', error);
@@ -350,11 +350,11 @@ export const createOrder = async (orderData) => {
       headers: createHeaders(true),
       body: JSON.stringify(orderData),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to create order');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Create order error:', error);
@@ -369,11 +369,11 @@ export const fulfillOrder = async (orderId) => {
       headers: createHeaders(true),
       body: JSON.stringify({ id: orderId }),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fulfill order');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Fulfill order error:', error);
@@ -388,11 +388,11 @@ export const getAllUsers = async () => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch users');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get all users error:', error);
@@ -406,11 +406,11 @@ export const getUserById = async (id) => {
       method: 'GET',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch user');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Get user by id error:', error);
@@ -425,11 +425,11 @@ export const updateUserRole = async (id, role) => {
       headers: createHeaders(true),
       body: JSON.stringify({ role }),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to update user role');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Update user role error:', error);
@@ -443,11 +443,11 @@ export const deleteUser = async (id) => {
       method: 'DELETE',
       headers: createHeaders(true),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to delete user');
     }
-    
+
     // Check if response has content before parsing JSON
     const text = await response.text();
     return text ? JSON.parse(text) : { success: true };
@@ -549,20 +549,38 @@ export const getPreferencesDistribution = async () => {
   }
 };
 
-export const getEngagement = async (days = 30) => {
+export const getEngagement = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/engagement?days=${days}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/engagement`, {
       method: 'GET',
       headers: createHeaders(true),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch engagement metrics');
+      throw new Error('Failed to fetch engagement data');
     }
 
     return await response.json();
   } catch (error) {
     console.error('Get engagement error:', error);
+    throw error;
+  }
+};
+
+export const getRecommendationRatingsAnalytics = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/admin/analytics/recommendation-ratings`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch recommendation ratings');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Get recommendation ratings error:', error);
     throw error;
   }
 };
@@ -613,17 +631,15 @@ export const sendChatMessage = async (payload) => {
       }
       throw new Error(errorMessage);
     }
-    
+
     const data = await response.json();
-    
+
     // Validate response structure
     if (!data || typeof data.message !== 'string') {
       throw new Error('Invalid response format from AI service');
     }
-    
-    return data;
 
-    return await response.json();
+    return data;
   } catch (error) {
     console.error('Chat error:', error);
     // Re-throw with more context if it's a network error
