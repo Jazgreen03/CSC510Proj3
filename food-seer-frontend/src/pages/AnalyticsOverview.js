@@ -109,17 +109,8 @@ const AnalyticsOverview = () => {
     fetchData();
   }, [navigate]);
 
-  if (loading) return (
-    <div className="analytics-container" role="main" aria-busy="true">
-      <div className="loading" role="status" aria-live="polite">Loading analytics...</div>
-    </div>
-  );
-  
-  if (!overview) return (
-    <div className="analytics-container" role="main">
-      <p role="status">No analytics available.</p>
-    </div>
-  );
+  if (loading) return <div className="analytics-container"><div className="loading">Loading analytics...</div></div>;
+  if (!overview) return <div className="analytics-container">No analytics available.</div>;
 
   const ordersData = {
     labels: ordersSeries.labels,
@@ -359,171 +350,158 @@ const AnalyticsOverview = () => {
   };
 
   return (
-    <div className="analytics-container" role="main" aria-labelledby="analytics-heading">
+    <div className="analytics-container">
       <div className="dashboard-header">
-        <h1 id="analytics-heading"><span aria-hidden="true">📈</span> Analytics & Insights</h1>
+        <h1>📈 Analytics & Insights</h1>
       </div>
 
-  <div className="dashboard-stats" role="region" aria-label="Key statistics overview">
-        <div className="stat-card" role="article" tabIndex={0} aria-label={`Total orders: ${overview.totalOrders}`}>
-          <h3 id="total-orders-stat">Total Orders</h3>
-          <p className="stat-number" aria-labelledby="total-orders-stat">{overview.totalOrders}</p>
+  <div className="dashboard-stats">
+        <div className="stat-card">
+          <h3>Total Orders</h3>
+          <p className="stat-number">{overview.totalOrders}</p>
         </div>
-        <div className="stat-card" role="article" tabIndex={0} aria-label={`Fulfilled orders: ${overview.fulfilledOrders}`}>
-          <h3 id="fulfilled-orders-stat">Fulfilled Orders</h3>
-          <p className="stat-number" aria-labelledby="fulfilled-orders-stat">{overview.fulfilledOrders}</p>
+        <div className="stat-card">
+          <h3>Fulfilled Orders</h3>
+          <p className="stat-number">{overview.fulfilledOrders}</p>
         </div>
-        <div className="stat-card" role="article" tabIndex={0} aria-label={`Unfulfilled orders: ${overview.unfulfilledOrders}`}>
-          <h3 id="unfulfilled-orders-stat">Unfulfilled Orders</h3>
-          <p className="stat-number" aria-labelledby="unfulfilled-orders-stat">{overview.unfulfilledOrders}</p>
+        <div className="stat-card">
+          <h3>Unfulfilled Orders</h3>
+          <p className="stat-number">{overview.unfulfilledOrders}</p>
         </div>
-        <div className="stat-card" role="article" tabIndex={0} aria-label={`Total revenue: ${overview.totalRevenue} dollars`}>
-          <h3 id="total-revenue-stat">Total Revenue</h3>
-          <p className="stat-number" aria-labelledby="total-revenue-stat">${overview.totalRevenue}</p>
+        <div className="stat-card">
+          <h3>Total Revenue</h3>
+          <p className="stat-number">${overview.totalRevenue}</p>
         </div>
-        <div className="stat-card" role="article" tabIndex={0} aria-label={`Average order value: ${overview.avgOrderValue.toFixed(2)} dollars`}>
-          <h3 id="avg-order-stat">Avg Order Value</h3>
-          <p className="stat-number" aria-labelledby="avg-order-stat">${overview.avgOrderValue.toFixed(2)}</p>
+        <div className="stat-card">
+          <h3>Avg Order Value</h3>
+          <p className="stat-number">${overview.avgOrderValue.toFixed(2)}</p>
         </div>
       </div>
       <div style={{ maxWidth: 1200, margin: '8px auto' }}>
-        <div className="stat-card" style={{ padding: 12 }} role="region" aria-labelledby="anomalies-heading">
-          <h4 id="anomalies-heading">Anomalies</h4>
+        <div className="stat-card" style={{ padding: 12 }}>
+          <h4>Anomalies</h4>
           {anomalies && anomalies.length > 0 ? (
             <div>
-              <ul style={{ margin: 0, paddingLeft: 16 }} role="list" aria-label={`${anomalies.length} anomalies detected`}>
+              <ul style={{ margin: 0, paddingLeft: 16 }}>
                 {anomalies.map((a) => (
-                  <li key={a.date} role="listitem" aria-label={`Anomaly on ${a.date}: ${a.count} orders, type ${a.type}, z-score ${Number(a.zScore).toFixed(2)}`}>
-                    <strong>{a.date}</strong>: {a.count} ({a.type}, z={Number(a.zScore).toFixed(2)})
-                  </li>
+                  <li key={a.date}><strong>{a.date}</strong>: {a.count} ({a.type}, z={Number(a.zScore).toFixed(2)})</li>
                 ))}
               </ul>
             </div>
           ) : (
-            <div style={{ color: '#666' }} role="status">No anomalies detected in selected window.</div>
+            <div style={{ color: '#666' }}>No anomalies detected in selected window.</div>
           )}
         </div>
       </div>
 
-      <div className="analytics-controls" style={{ maxWidth: 1200, margin: '10px auto' }} role="region" aria-label="Analytics controls and export options">
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} role="group" aria-label="Time window selection">
+      <div className="analytics-controls" style={{ maxWidth: 1200, margin: '10px auto' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <span>Window:</span>
           {[7,30,90,365].map(d => (
-            <button 
-              key={d} 
-              className={`nav-button ${daysWindow===d? 'active':''}`} 
-              onClick={() => { setDaysWindow(d); setLoading(true); window.requestAnimationFrame(()=> { window.location.reload(); }) }}
-              aria-label={`Set time window to ${d} days`}
-              aria-pressed={daysWindow===d}
-            >
+            <button key={d} className={`nav-button ${daysWindow===d? 'active':''}`} onClick={() => { setDaysWindow(d); setLoading(true); /** refetch */ window.requestAnimationFrame(()=> { window.location.reload(); }) }}>
               {d}d
             </button>
           ))}
           <label style={{ marginLeft: 12 }}>
-            <input 
-              type="checkbox" 
-              checked={zoomEnabled} 
-              onChange={(e) => setZoomEnabled(e.target.checked)}
-              aria-label="Enable zoom on charts"
-            /> Enable zoom
+            <input type="checkbox" checked={zoomEnabled} onChange={(e) => setZoomEnabled(e.target.checked)} /> Enable zoom
           </label>
         </div>
-        <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }} role="group" aria-label="Export options">
-          <button className="nav-button" onClick={downloadSnapshot} style={{ marginLeft: 8 }} aria-label="Download analytics snapshot as JSON file">Download snapshot (JSON)</button>
-          <button className="nav-button" onClick={downloadPdfAllCharts} style={{ marginLeft: 8 }} aria-label="Download all charts as PDF file">Download snapshot (PDF)</button>
-          <button className="nav-button" onClick={downloadCsvBundle} style={{ marginLeft: 8 }} aria-label="Download all data as CSV bundle ZIP file">Download CSV bundle (ZIP)</button>
+        <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button className="nav-button" onClick={downloadSnapshot} style={{ marginLeft: 8 }}>Download snapshot (JSON)</button>
+          <button className="nav-button" onClick={downloadPdfAllCharts} style={{ marginLeft: 8 }}>Download snapshot (PDF)</button>
+          <button className="nav-button" onClick={downloadCsvBundle} style={{ marginLeft: 8 }}>Download CSV bundle (ZIP)</button>
         </div>
       </div>
 
-      <div className="analytics-charts" role="region" aria-label="Analytics charts">
-        <div className="chart-card" role="article" aria-labelledby="orders-chart-heading">
+      <div className="analytics-charts">
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 id="orders-chart-heading">Orders (last {daysWindow} days)</h3>
-            <div className="chart-toolbar" role="group" aria-label="Orders chart actions">
-              <button className="btn-link" onClick={() => { setModalContent(<Line data={ordersData} options={zoomOptions} />); setModalOpen(true); }} aria-label="Maximize orders chart">Maximize</button>
-              <button className="btn-link" onClick={() => exportPng(ordersRef, 'orders.png')} aria-label="Export orders chart as PNG">PNG</button>
-              <button className="btn-link" onClick={() => exportCsv(ordersSeries.labels, ordersSeries.data, 'orders.csv')} aria-label="Export orders data as CSV">CSV</button>
+            <h3>Orders (last {daysWindow} days)</h3>
+            <div className="chart-toolbar">
+              <button className="btn-link" onClick={() => { setModalContent(<Line data={ordersData} options={zoomOptions} />); setModalOpen(true); }}>Maximize</button>
+              <button className="btn-link" onClick={() => exportPng(ordersRef, 'orders.png')}>PNG</button>
+              <button className="btn-link" onClick={() => exportCsv(ordersSeries.labels, ordersSeries.data, 'orders.csv')}>CSV</button>
             </div>
           </div>
-          <div className="chart-body small-chart" role="img" aria-label={`Line chart showing orders per day for the last ${daysWindow} days`}>
+          <div className="chart-body small-chart">
             <Line ref={ordersRef} data={ordersData} options={{ maintainAspectRatio: false, ...zoomOptions }} />
           </div>
         </div>
 
-        <div className="chart-card" role="article" aria-labelledby="top-products-chart-heading">
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 id="top-products-chart-heading">Top Products</h3>
-            <div className="chart-toolbar" role="group" aria-label="Top products chart actions">
-              <button className="btn-link" onClick={() => { setModalContent(<Bar data={topProductsData} options={zoomOptions} />); setModalOpen(true); }} aria-label="Maximize top products chart">Maximize</button>
-              <button className="btn-link" onClick={() => exportPng(topRef, 'top-products.png')} aria-label="Export top products chart as PNG">PNG</button>
-              <button className="btn-link" onClick={() => exportCsv(Object.keys(topProductsData.labels || topProducts || {}), Object.values(topProducts || {}), 'top-products.csv')} aria-label="Export top products data as CSV">CSV</button>
+            <h3>Top Products</h3>
+            <div className="chart-toolbar">
+              <button className="btn-link" onClick={() => { setModalContent(<Bar data={topProductsData} options={zoomOptions} />); setModalOpen(true); }}>Maximize</button>
+              <button className="btn-link" onClick={() => exportPng(topRef, 'top-products.png')}>PNG</button>
+              <button className="btn-link" onClick={() => exportCsv(Object.keys(topProductsData.labels || topProducts || {}), Object.values(topProducts || {}), 'top-products.csv')}>CSV</button>
             </div>
           </div>
-          <div className="chart-body small-chart" role="img" aria-label="Bar chart showing top products by order count">
+          <div className="chart-body small-chart">
             <Bar ref={topRef} data={topProductsData} options={{ maintainAspectRatio: false, ...zoomOptions }} />
           </div>
         </div>
 
-        <div className="chart-card" role="article" aria-labelledby="cost-pref-chart-heading">
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 id="cost-pref-chart-heading">Customer Cost Preferences</h3>
-            <div className="chart-toolbar" role="group" aria-label="Cost preferences chart actions">
-              <button className="btn-link" onClick={() => { setModalContent(costPrefData ? <Pie data={costPrefData} options={zoomOptions} /> : <p>No preference data</p>); setModalOpen(true); }} aria-label="Maximize cost preferences chart">Maximize</button>
-              <button className="btn-link" onClick={() => exportPng(costRef, 'cost-pref.png')} aria-label="Export cost preferences chart as PNG">PNG</button>
-              <button className="btn-link" onClick={() => costPrefData && exportCsv(Object.keys(costPrefData.labels || {}), Object.values(costPrefData.datasets[0].data || []), 'cost-preferences.csv')} aria-label="Export cost preferences data as CSV">CSV</button>
+            <h3>Customer Cost Preferences</h3>
+            <div className="chart-toolbar">
+              <button className="btn-link" onClick={() => { setModalContent(costPrefData ? <Pie data={costPrefData} options={zoomOptions} /> : <p>No preference data</p>); setModalOpen(true); }}>Maximize</button>
+              <button className="btn-link" onClick={() => exportPng(costRef, 'cost-pref.png')}>PNG</button>
+              <button className="btn-link" onClick={() => costPrefData && exportCsv(Object.keys(costPrefData.labels || {}), Object.values(costPrefData.datasets[0].data || []), 'cost-preferences.csv')}>CSV</button>
             </div>
           </div>
-          <div className="chart-body small-chart" role="img" aria-label="Pie chart showing customer cost preference distribution">
-            {costPrefData ? <Pie ref={costRef} data={costPrefData} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p role="status">No preference data</p>}
+          <div className="chart-body small-chart">
+            {costPrefData ? <Pie ref={costRef} data={costPrefData} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p>No preference data</p>}
           </div>
         </div>
 
-        <div className="chart-card" role="article" aria-labelledby="diet-pref-chart-heading">
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 id="diet-pref-chart-heading">Dietary Restrictions / Allergies (users)</h3>
-            <div className="chart-toolbar" role="group" aria-label="Dietary restrictions chart actions">
-              <button className="btn-link" onClick={() => { setModalContent(dietPrefData ? <Pie data={dietPrefData} options={zoomOptions} /> : <p>No data</p>); setModalOpen(true); }} aria-label="Maximize dietary restrictions chart">Maximize</button>
-              <button className="btn-link" onClick={() => exportPng(costRef, 'diet-pref.png')} aria-label="Export dietary restrictions chart as PNG">PNG</button>
-              <button className="btn-link" onClick={() => dietPrefData && exportCsv(Object.keys(dietPrefData.labels || {}), Object.values(dietPrefData.datasets[0].data || []), 'diet-preferences.csv')} aria-label="Export dietary restrictions data as CSV">CSV</button>
+            <h3>Dietary Restrictions / Allergies (users)</h3>
+            <div className="chart-toolbar">
+              <button className="btn-link" onClick={() => { setModalContent(dietPrefData ? <Pie data={dietPrefData} options={zoomOptions} /> : <p>No data</p>); setModalOpen(true); }}>Maximize</button>
+              <button className="btn-link" onClick={() => exportPng(costRef, 'diet-pref.png')}>PNG</button>
+              <button className="btn-link" onClick={() => dietPrefData && exportCsv(Object.keys(dietPrefData.labels || {}), Object.values(dietPrefData.datasets[0].data || []), 'diet-preferences.csv')}>CSV</button>
             </div>
           </div>
-          <div className="chart-body small-chart" role="img" aria-label="Pie chart showing dietary restrictions and allergen distribution among users">
-            {dietPrefData ? <Pie data={dietPrefData} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p role="status">No diet preference data</p>}
+          <div className="chart-body small-chart">
+            {dietPrefData ? <Pie data={dietPrefData} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p>No diet preference data</p>}
           </div>
         </div>
 
-        <div className="chart-card" role="article" aria-labelledby="top-customers-chart-heading">
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 id="top-customers-chart-heading">Top Customers (last {daysWindow} days)</h3>
-            <div className="chart-toolbar" role="group" aria-label="Top customers chart actions">
-              <button className="btn-link" onClick={() => { setModalContent(topCustomersData ? <Bar data={topCustomersData} options={zoomOptions} /> : <p>No engagement data</p>); setModalOpen(true); }} aria-label="Maximize top customers chart">Maximize</button>
-              <button className="btn-link" onClick={() => exportPng(customersRef, 'top-customers.png')} aria-label="Export top customers chart as PNG">PNG</button>
-              <button className="btn-link" onClick={() => topCustomersData && exportCsv(Object.keys(topCustomersData.labels || {}), Object.values(topCustomersData.datasets[0].data || []), 'top-customers.csv')} aria-label="Export top customers data as CSV">CSV</button>
+            <h3>Top Customers (last {daysWindow} days)</h3>
+            <div className="chart-toolbar">
+              <button className="btn-link" onClick={() => { setModalContent(topCustomersData ? <Bar data={topCustomersData} options={zoomOptions} /> : <p>No engagement data</p>); setModalOpen(true); }}>Maximize</button>
+              <button className="btn-link" onClick={() => exportPng(customersRef, 'top-customers.png')}>PNG</button>
+              <button className="btn-link" onClick={() => topCustomersData && exportCsv(Object.keys(topCustomersData.labels || {}), Object.values(topCustomersData.datasets[0].data || []), 'top-customers.csv')}>CSV</button>
             </div>
           </div>
-          <div className="chart-body small-chart" role="img" aria-label={`Bar chart showing top customers by order count for the last ${daysWindow} days`}>
-            {topCustomersData ? <Bar ref={customersRef} data={topCustomersData} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p role="status">No engagement data</p>}
+          <div className="chart-body small-chart">
+            {topCustomersData ? <Bar ref={customersRef} data={topCustomersData} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p>No engagement data</p>}
           </div>
         </div>
 
-        <div className="chart-card" role="article" aria-labelledby="inventory-chart-heading">
+        <div className="chart-card">
           <div className="chart-header">
-            <h3 id="inventory-chart-heading">Inventory Levels</h3>
-            <div className="chart-toolbar" role="group" aria-label="Inventory chart actions">
-              <button className="btn-link" onClick={() => { setModalContent(inventory && inventory.length ? <Bar data={{ labels: inventory.map(f=>f.foodName), datasets:[{data: inventory.map(f=>f.amount), backgroundColor:'rgba(153,102,255,0.6)'}] }} options={zoomOptions} /> : <p>No inventory</p>); setModalOpen(true); }} aria-label="Maximize inventory chart">Maximize</button>
-              <button className="btn-link" onClick={() => exportPng(inventoryRef, 'inventory.png')} aria-label="Export inventory chart as PNG">PNG</button>
-              <button className="btn-link" onClick={() => inventory && exportCsv(inventory.map(f=>f.foodName), inventory.map(f=>f.amount), 'inventory.csv')} aria-label="Export inventory data as CSV">CSV</button>
+            <h3>Inventory Levels</h3>
+            <div className="chart-toolbar">
+              <button className="btn-link" onClick={() => { setModalContent(inventory && inventory.length ? <Bar data={{ labels: inventory.map(f=>f.foodName), datasets:[{data: inventory.map(f=>f.amount), backgroundColor:'rgba(153,102,255,0.6)'}] }} options={zoomOptions} /> : <p>No inventory</p>); setModalOpen(true); }}>Maximize</button>
+              <button className="btn-link" onClick={() => exportPng(inventoryRef, 'inventory.png')}>PNG</button>
+              <button className="btn-link" onClick={() => inventory && exportCsv(inventory.map(f=>f.foodName), inventory.map(f=>f.amount), 'inventory.csv')}>CSV</button>
             </div>
           </div>
-          <div className="chart-body small-chart" role="img" aria-label="Bar chart showing current inventory stock levels for all products">
-            {inventory && inventory.length ? <Bar ref={inventoryRef} data={{ labels: inventory.map(f=>f.foodName), datasets:[{label: 'Stock', data: inventory.map(f=>f.amount), backgroundColor:'rgba(153,102,255,0.6)'}] }} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p role="status">No inventory data</p>}
+          <div className="chart-body small-chart">
+            {inventory && inventory.length ? <Bar ref={inventoryRef} data={{ labels: inventory.map(f=>f.foodName), datasets:[{label: 'Stock', data: inventory.map(f=>f.amount), backgroundColor:'rgba(153,102,255,0.6)'}] }} options={{ maintainAspectRatio: false, ...zoomOptions }} /> : <p>No inventory data</p>}
           </div>
         </div>
       </div>
 
       {modalOpen && (
         <ChartModal onClose={() => { setModalOpen(false); setModalContent(null); }}>
-          <div style={{ width: '100%', height: '100%' }} role="dialog" aria-label="Maximized chart view">{modalContent}</div>
+          <div style={{ width: '100%', height: '100%' }}>{modalContent}</div>
         </ChartModal>
       )}
     </div>
