@@ -89,7 +89,7 @@ To set up the project locally, follow these steps.
 
 **Clone the Repository:**
 ```bash
-git clone [https://github.com/NovaCorz/CSC510.git](https://github.com/Jazgreen03/CSC510Proj3.git)
+git clone https://github.com/Jazgreen03/CSC510Proj3.git
 cd CSC510
 ```
 Choose Your Installation Method. Detailed instructions are available in [INSTALL.md](INSTALL.md).
