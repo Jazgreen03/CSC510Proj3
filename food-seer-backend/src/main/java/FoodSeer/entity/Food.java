@@ -5,6 +5,7 @@ import java.util.List;
 
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -42,8 +43,14 @@ public class Food {
     /**
      * List representing allergies associated with the food
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> allergies = new ArrayList<>();
+
+    /**
+     * List of tags for flexible filtering (e.g., VEGETARIAN, VEGAN, SPICY, MILD, CHINESE, ITALIAN, DESSERT, HOT, COLD, etc.)
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> tags = new ArrayList<>();
 
     /**
      * Constructor for Hibernate
@@ -171,5 +178,24 @@ public class Food {
      */
     public void setAllergies ( final List<String> allergies ) {
         this.allergies = allergies;
+    }
+
+    /**
+     * Gets the tags associated with the food
+     *
+     * @return The tags list
+     */
+    public List<String> getTags () {
+        return tags;
+    }
+
+    /**
+     * Sets the tags list to @param tags
+     *
+     * @param tags
+     *            The tags to set
+     */
+    public void setTags ( final List<String> tags ) {
+        this.tags = tags;
     }
 }

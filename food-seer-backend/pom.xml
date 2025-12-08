@@ -16,6 +16,8 @@
     <maven.compiler.release>21</maven.compiler.release>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
+  <!-- Skip JaCoCo by default because the bundled agent doesn't support very new Java majors; enable with -Djacoco.skip=false -->
+  <jacoco.skip>true</jacoco.skip>
   </properties>
 
   <!-- JUnit BOM -->
@@ -30,7 +32,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
   <dependencies>
     <!-- Spring Boot -->
     <dependency>
@@ -50,14 +51,15 @@
     </dependency>
 
     <!-- Lombok -->
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <version>1.18.30</version>
-      <scope>provided</scope>
-    </dependency>
+      <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <version>1.18.38</version>
+          <scope>provided</scope>
+      </dependency>
 
-    <!-- Persistence -->
+
+      <!-- Persistence -->
     <dependency>
       <groupId>jakarta.persistence</groupId>
       <artifactId>jakarta.persistence-api</artifactId>
@@ -108,8 +110,6 @@
       <scope>test</scope>
     </dependency>
 
-    
-
     <!-- Test Dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -152,11 +152,13 @@
           <version>3.13.0</version>
           <configuration>
             <release>${maven.compiler.release}</release>
+            <!-- Fork javac to avoid in-process classloader/compatibility issues -->
+            <fork>true</fork>
             <annotationProcessorPaths>
               <path>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
-                <version>1.18.30</version>
+                <version>1.18.38</version>
               </path>
             </annotationProcessorPaths>
           </configuration>
@@ -164,6 +166,13 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.3.0</version>
+          <configuration>
+            <!-- Exclude frontend Selenium tests by default because they require the React dev server on :3000 -->
+            <excludes>
+              <exclude>**/FoodSeer/frontend/**</exclude>
+              <exclude>**/*FrontendTest.java</exclude>
+            </excludes>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
@@ -201,6 +210,9 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>0.8.11</version>
+        <configuration>
+          <skip>${jacoco.skip}</skip>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -217,7 +229,26 @@
         </executions>
       </plugin>
 
+
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>with-frontend-tests</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <!-- Don't exclude frontend tests when this profile is active -->
+              <excludes />
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
 </project>

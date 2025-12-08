@@ -2,6 +2,7 @@ package FoodSeer.dto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 import FoodSeer.entity.Food;
 
@@ -22,6 +23,8 @@ public class OrderDto {
 
     /** Boolean used to track if the order has been fulfilled */
     private boolean isFulfilled;
+    /** Timestamp when the order was created. */
+    private LocalDateTime createdAt;
 
     /**
      * Default constructor for OrderDto.
@@ -123,5 +126,13 @@ public class OrderDto {
      */
     public void setIsFulfilled(final boolean isFulfilled) {
         this.isFulfilled = isFulfilled;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(final LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

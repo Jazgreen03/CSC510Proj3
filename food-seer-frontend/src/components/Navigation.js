@@ -157,6 +157,15 @@ const Navigation = () => {
                 >
                   👥 User Management
                 </button>
+                <button
+                  className={`nav-link admin ${location.pathname === '/admin/analytics' ? 'active' : ''}`}
+                  onClick={() => {
+                    navigate('/admin/analytics');
+                    setMenuOpen(false);
+                  }}
+                >
+                  📈 Analytics
+                </button>
               </>
             )}
           </div>

@@ -101,21 +101,6 @@ const Recommendations = () => {
 
   return (
     <div className="recommendations-container">
-      <div className="recommendations-header">
-        <h1 className="recommendations-title">🍽️ FoodSeer Recommendations</h1>
-        <div className="header-actions">
-          <button className="nav-button" onClick={handleBrowseInventory}>
-            Browse All Foods
-          </button>
-          <button className="nav-button" onClick={handleViewOrders}>
-            My Orders
-          </button>
-        <button className="logout-button" onClick={handleLogout}>
-          Logout
-        </button>
-        </div>
-      </div>
-
       <div className="user-info-card">
         <h2>Welcome, {user?.username}!</h2>
         <div className="preferences-summary">

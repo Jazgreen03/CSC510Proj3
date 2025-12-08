@@ -32,14 +32,19 @@ const CreateOrder = () => {
   }, [navigate]);
 
   // Handle food from chatbot recommendation
+  const hasAddedRef = React.useRef(false);
+  
   useEffect(() => {
-    if (location.state?.addToCart && foods.length > 0) {
+    if (location.state?.addToCart && foods.length > 0 && !hasAddedRef.current) {
       const recommendedFood = location.state.addToCart;
       
       // Check if the food is in stock
       const foodInStock = foods.find(f => f.id === recommendedFood.id);
       
       if (foodInStock) {
+        // Mark as added to prevent duplicate additions
+        hasAddedRef.current = true;
+        
         // Add to cart
         setCart(prev => ({
           ...prev,
@@ -52,14 +57,17 @@ const CreateOrder = () => {
         // Show notification
         setNotification(`✅ ${foodInStock.foodName} has been added to your cart!`);
         setTimeout(() => setNotification(null), 5000);
+        
+        // Clear the state to prevent re-adding on re-render
+        window.history.replaceState({}, document.title);
       } else {
         // Show out of stock notification
         setNotification(`⚠️ Sorry, ${recommendedFood.foodName} is currently out of stock.`);
         setTimeout(() => setNotification(null), 5000);
+        
+        // Clear the state
+        window.history.replaceState({}, document.title);
       }
-      
-      // Clear the state to prevent re-adding on re-render
-      window.history.replaceState({}, document.title);
     }
   }, [location.state, foods]);
 

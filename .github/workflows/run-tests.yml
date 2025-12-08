@@ -29,6 +29,7 @@ jobs:
       SPRING_TEST_DATABASE_REPLACE: any
       SPRING_SQL_INIT_MODE: never
       APP_JWT_SECRET: "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF"
+      JACOCO_SKIP: false
 
     steps:
       - name: Check out repository
@@ -105,7 +106,7 @@ jobs:
       - name: Build & Run Tests with Coverage
         run: |
           cd food-seer-backend
-          mvn -B clean test
+          mvn -B clean test jacoco:report -Djacoco.skip=false -fae
 
       - name: Check for JaCoCo report
         working-directory: food-seer-backend
@@ -121,7 +122,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: food-seer-backend/target/site/jacoco/jacoco.xml
+          files: target/site/jacoco/jacoco.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
