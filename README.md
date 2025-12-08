@@ -99,12 +99,12 @@ Choose Your Installation Method. Detailed instructions are available in [INSTALL
 ## 🎥 Demo Video
 Check out our demo video to see the application in action! Click the link below to watch:
 
-[▶️ Watch the Demo Video](https://github.com/NovaCorz/CSC510/blob/main/doc/DEMO.mkv)
+[▶️ Watch the Demo Video](https://drive.google.com/file/d/18Jni2huXm3ToBDHWlzz3YNTVR0tIXJ_j/view?usp=drive_link)
 
 ---
 
 ## 📊 Project Poster
-Curious about our project? View our project poster showcasing key aspects of the system [here](https://github.com/NovaCorz/CSC510/blob/main/doc/proj2.pdf).
+Curious about our project? View our project poster showcasing key aspects of the system [here](https://www.canva.com/design/DAG6k_7LpyA/P2mN3NLNBDciKuk23S4CiA/edit?utm_content=DAG6k_7LpyA&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton).
 
 ---
 
