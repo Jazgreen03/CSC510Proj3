@@ -164,440 +164,318 @@ const Chatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-} catch (error) {
-  console.error('Error sending message:', error);
-  setMessages(prev => [...prev, {
-    role: 'assistant',
-    content: 'Sorry, I encountered an error. Please make sure Ollama is running and try again.'
-  }]);
-} finally {
-  setIsLoading(false);
-}
+
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
-// Removed handleKeyPress, generateNextQuestion, getPersonalizedPrompt as they are part of guided flow
+  const handleSendMessage = async () => {
+    if (!customQuestion.trim()) return;
 
-const handleKeyPress = (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSendMessage();
-  }
-};
+    const userMessage = {
+      role: 'user',
+      content: customQuestion
+    };
 
-const handleSendMessage = async () => {
-  if (!customQuestion.trim()) return;
+    setMessages(prev => [...prev, userMessage]);
+    setCustomQuestion('');
+    setIsLoading(true);
 
-  const userMessage = {
-    role: 'user',
-    content: customQuestion
-  };
+    try {
+      // Free conversation mode - send raw user input to backend
+      // Include current user message in history for context
+      const historyPayload = [...messages, userMessage].map(m => ({ role: m.role, content: m.content }));
+      const aiResponse = await sendChatMessage({
+        message: userMessage.content,
+        mode: 'auto', // Let backend decide based on content
+        history: historyPayload,
+        userId: currentUserId
+      });
 
-  setMessages(prev => [...prev, userMessage]);
-  setCustomQuestion('');
-  setIsLoading(true);
+      const aiText = aiResponse.message || aiResponse;
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: aiText
+      }]);
 
-  try {
-    // Free conversation mode - send raw user input to backend
-    // Include current user message in history for context
-    const historyPayload = [...messages, userMessage].map(m => ({ role: m.role, content: m.content }));
-    const aiResponse = await sendChatMessage({
-      message: userMessage.content,
-      mode: 'auto', // Let backend decide based on content
-      history: historyPayload,
-      userId: currentUserId
-    });
-
-    const aiText = aiResponse.message || aiResponse;
-    setMessages(prev => [...prev, {
-      role: 'assistant',
-      content: aiText
-    }]);
-
-    // If backend detected and matched a food, show recommendation card
-    if (aiResponse.matchedFoodId) {
-      try {
-        const foods = await getAllFoods();
-        const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
-        if (matchedFood) {
-          setRecommendedFood(matchedFood);
-          setMessages(prev => [...prev, {
-            role: 'system',
-            content: 'recommendation-card',
-            food: matchedFood
-          }]);
+      // If backend detected and matched a food, show recommendation card
+      if (aiResponse.matchedFoodId) {
+        try {
+          const foods = await getAllFoods();
+          const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
+          if (matchedFood) {
+            setRecommendedFood(matchedFood);
+            setMessages(prev => [...prev, {
+              role: 'system',
+              content: 'recommendation-card',
+              food: matchedFood
+            }]);
+          }
+        } catch (e) {
+          // ignore
         }
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please make sure Ollama is running and try again.'
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
+  const handleOrderFood = () => {
+    if (recommendedFood) {
+      // Navigate to create order page with the recommended food
+      // The CreateOrder page will add it to the cart automatically
+      navigate('/create-order', { state: { addToCart: recommendedFood } });
+    }
+  };
+
+  const handleStartOver = async () => {
+    // Start with just a simple greeting question (no backend call to avoid food recommendations)
+    const newMessages = [{
+      role: 'assistant',
+      content: 'How are you feeling today?'
+    }];
+
+    setIsLoading(true);
+
+    // Clear server-side conversation history (if logged in)
+    if (currentUserId) {
+      try {
+        await clearConversationHistory(currentUserId);
+      } catch (err) {
+        console.warn('Failed to clear server conversation history:', err);
+      }
+    }
+
+    // Reset local storage and local state
+    const newState = {
+      messages: newMessages,
+      conversationStep: 0,
+      userResponses: { mood: '', hunger: '', preference: '' },
+      recommendedFood: null
+    };
+
+    setMessages(newState.messages);
+    setConversationStep(newState.conversationStep);
+    setUserResponses(newState.userResponses);
+    setRecommendedFood(newState.recommendedFood);
+
+    // Reset rating state
+    setRating(0);
+    setHoverRating(0);
+    setHasRated(false);
+    setRatingMessage('');
+
+    // Clear user-specific chatbot state
+    if (currentUserId) {
+      try {
+        localStorage.removeItem(`chatbotState_${currentUserId}`);
       } catch (e) {
         // ignore
       }
     }
-  } catch (error) {
-    console.error('Error sending message:', error);
-    setMessages(prev => [...prev, {
-      role: 'assistant',
-      content: 'Sorry, I encountered an error. Please make sure Ollama is running and try again.'
-    }]);
-  } finally {
+
+    // show confirmation toast
+    showToast('Conversation cleared');
+
     setIsLoading(false);
-  }
-};
-
-const handleKeyPress = (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    handleSendMessage();
-  }
-};
-
-const handleSendCustomQuestion = async () => {
-  if (!customQuestion.trim()) return;
-
-  const userMessage = {
-    role: 'user',
-    content: customQuestion
   };
 
-  setMessages(prev => [...prev, userMessage]);
-  setIsLoading(true);
-  setCustomQuestion('');
-
-  try {
-    // Filter out system messages (like recommendation-card) when building history
-    const historyPayload = messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({ role: m.role, content: m.content }));
-
-    const aiResponse = await sendChatMessage({
-      message: customQuestion,
-      mode: 'freeform',
-      history: historyPayload,
-      userId: currentUserId
-    });
-
-    console.log('AI Response:', aiResponse);
-    console.log('Matched Food ID:', aiResponse.matchedFoodId);
-
-    const aiText = aiResponse.message || aiResponse;
-    setMessages(prev => [...prev, {
-      role: 'assistant',
-      content: aiText
-    }]);
-
-    // If backend returned matchedFoodId, fetch the food and show recommendation card
-    if (aiResponse.matchedFoodId) {
-      try {
-        const foods = await getAllFoods();
-        const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
-        if (matchedFood) {
-          setRecommendedFood(matchedFood);
-          setMessages(prev => [...prev, {
-            role: 'system',
-            content: 'recommendation-card',
-            food: matchedFood
-          }]);
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-  } catch (error) {
-    console.error('Error sending custom question:', error);
-    setMessages(prev => [...prev, {
-      role: 'assistant',
-      content: 'Sorry, I encountered an error responding to your question.'
-    }]);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-const handleOrderFood = () => {
-  if (recommendedFood) {
-    // Navigate to create order page with the recommended food
-    // The CreateOrder page will add it to the cart automatically
-    navigate('/create-order', { state: { addToCart: recommendedFood } });
-  }
-};
-
-const handleStartOver = async () => {
-  // Start with just a simple greeting question (no backend call to avoid food recommendations)
-  const newMessages = [{
-    role: 'assistant',
-    content: 'How are you feeling today?'
-  }];
-
-  setIsLoading(true);
-
-  // Clear server-side conversation history (if logged in)
-  if (currentUserId) {
+  const showToast = (msg, duration = 3000) => {
     try {
-      await clearConversationHistory(currentUserId);
-    } catch (err) {
-      console.warn('Failed to clear server conversation history:', err);
-    }
-  }
-
-  // Reset local storage and local state
-  const newState = {
-    messages: newMessages,
-    conversationStep: 0,
-    userResponses: { mood: '', hunger: '', preference: '' },
-    recommendedFood: null
-  };
-
-  setMessages(newState.messages);
-  setConversationStep(newState.conversationStep);
-  setUserResponses(newState.userResponses);
-  setRecommendedFood(newState.recommendedFood);
-
-  // Reset rating state
-  setRating(0);
-  setHoverRating(0);
-  setHasRated(false);
-  setRatingMessage('');
-
-  // Clear user-specific chatbot state
-  if (currentUserId) {
-    try {
-      localStorage.removeItem(`chatbotState_${currentUserId}`);
+      setToastMessage(msg);
+      window.setTimeout(() => setToastMessage(null), duration);
     } catch (e) {
       // ignore
     }
-  }
-
-  // show confirmation toast
-  showToast('Conversation cleared');
-
-  setIsLoading(false);
-};
-
-const showToast = (msg, duration = 3000) => {
-  try {
-    setToastMessage(msg);
-    window.setTimeout(() => setToastMessage(null), duration);
-  } catch (e) {
-    // ignore
-  }
-};
-
-const handleGetAnotherSuggestion = async () => {
-  const userMessage = {
-    role: 'user',
-    content: 'Can you suggest something else?'
   };
 
-  setMessages(prev => [...prev, userMessage]);
-  setIsLoading(true);
-  setRecommendedFood(null);
+  const handleGetAnotherSuggestion = async () => {
+    const userMessage = {
+      role: 'user',
+      content: 'Can you suggest something else?'
+    };
 
-  try {
-    // Filter out system messages (like recommendation-card) when building history
-    const historyPayload = messages
-      .filter(m => m.role !== 'system')
-      .map(m => ({ role: m.role, content: m.content }));
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+    setRecommendedFood(null);
 
-    const aiResponse = await sendChatMessage({
-      message: 'Can you suggest something else? I would like a different recommendation.',
-      mode: 'recommend',
-      history: historyPayload,
-      userId: currentUserId
-    });
+    try {
+      // Filter out system messages (like recommendation-card) when building history
+      const historyPayload = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({ role: m.role, content: m.content }));
 
-    console.log('AI Response:', aiResponse);
-    console.log('Matched Food ID:', aiResponse.matchedFoodId);
+      const aiResponse = await sendChatMessage({
+        message: 'Can you suggest something else? I would like a different recommendation.',
+        mode: 'recommend',
+        history: historyPayload,
+        userId: currentUserId
+      });
 
-    const aiText = aiResponse.message || aiResponse;
-    setMessages(prev => [...prev, {
-      role: 'assistant',
-      content: aiText
-    }]);
+      console.log('AI Response:', aiResponse);
+      console.log('Matched Food ID:', aiResponse.matchedFoodId);
 
-    // If backend returned matchedFoodId, fetch the food and show recommendation card
-    if (aiResponse.matchedFoodId) {
-      try {
-        const foods = await getAllFoods();
-        const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
-        if (matchedFood) {
-          setRecommendedFood(matchedFood);
-          setMessages(prev => [...prev, {
-            role: 'system',
-            content: 'recommendation-card',
-            food: matchedFood
-          }]);
+      const aiText = aiResponse.message || aiResponse;
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: aiText
+      }]);
+
+      // If backend returned matchedFoodId, fetch the food and show recommendation card
+      if (aiResponse.matchedFoodId) {
+        try {
+          const foods = await getAllFoods();
+          const matchedFood = foods.find(f => f.id === aiResponse.matchedFoodId);
+          if (matchedFood) {
+            setRecommendedFood(matchedFood);
+            setMessages(prev => [...prev, {
+              role: 'system',
+              content: 'recommendation-card',
+              food: matchedFood
+            }]);
+          }
+        } catch (e) {
+          // ignore
         }
+      }
+    } catch (error) {
+      console.error('Error getting another suggestion:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Let me try again!'
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleToggleRecording = () => {
+    const recog = recognitionRef.current;
+    if (!recog) {
+      console.warn('SpeechRecognition not available in this browser.');
+      return;
+    }
+
+    if (isRecording) {
+      try { recog.stop(); } catch (e) { }
+      setIsRecording(false);
+    } else {
+      try {
+        recog.start();
+        setIsRecording(true);
       } catch (e) {
-        // ignore
+        console.error('Error starting recognition', e);
       }
     }
-  } catch (error) {
-    console.error('Error getting another suggestion:', error);
-    setMessages(prev => [...prev, {
-      role: 'assistant',
-      content: 'Sorry, I encountered an error. Let me try again!'
-    }]);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
-const handleToggleRecording = () => {
-  const recog = recognitionRef.current;
-  if (!recog) {
-    console.warn('SpeechRecognition not available in this browser.');
-    return;
-  }
-
-  if (isRecording) {
-    try { recog.stop(); } catch (e) { }
-    setIsRecording(false);
-  } else {
-    try {
-      recog.start();
-      setIsRecording(true);
-    } catch (e) {
-      console.error('Error starting recognition', e);
-    }
-  }
-};
-
-const getStarColor = (starNumber) => {
-  const displayRating = hoverRating || rating;
-  return starNumber <= displayRating ? '#ffc107' : '#e4e5e9';
-};
-
-return (
-  <div className="chatbot-container">
-    <div className="chatbot-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div>
-        <h2>🤖 FoodSeer AI Assistant</h2>
-        <p>Let me help you find the perfect meal for your day!</p>
+  return (
+    <div className="chatbot-container">
+      <div className="chatbot-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2>🤖 FoodSeer AI Assistant</h2>
+          <p>Let me help you find the perfect meal for your day!</p>
+        </div>
+        <div>
+          <button onClick={handleStartOver} className="btn-restart-chat" title="Restart conversation">
+            🔄 Restart
+          </button>
+        </div>
       </div>
-      <div>
-        <button onClick={handleStartOver} className="btn-restart-chat" title="Restart conversation">
-          🔄 Restart
+
+      <div className="chatbot-messages">
+        {messages.map((msg, index) => (
+          <div key={index} className={`message ${msg.role}`}>
+            {msg.role === 'system' && msg.content === 'recommendation-card' ? (
+              <div className="recommendation-card">
+                <h3>🎯 Your Personalized Recommendation</h3>
+                <div className="food-card">
+                  <h4>{msg.food.foodName}</h4>
+                  <p className="food-price">${msg.food.price.toFixed(2)}</p>
+                  <p className="food-allergies">
+                    {msg.food.allergies && msg.food.allergies.length > 0 ? (
+                      <>Contains: {msg.food.allergies.join(', ')}</>
+                    ) : (
+                      'No common allergens'
+                    )}
+                  </p>
+
+                  <div className="recommendation-actions">
+                    <button onClick={handleOrderFood} className="btn-primary">
+                      Order Now
+                    </button>
+                    <button onClick={handleGetAnotherSuggestion} className="btn-secondary">
+                      Get Another Suggestion
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="message-avatar">
+                  {msg.role === 'user' ? '👤' : '🤖'}
+                </div>
+                <div className="message-content">
+                  {msg.content}
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+        {isLoading && (
+          <div className="message assistant">
+            <div className="message-avatar">🤖</div>
+            <div className="message-content typing">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="chatbot-custom">
+        <input
+          id="customQuestion"
+          type="text"
+          value={customQuestion}
+          onChange={(e) => setCustomQuestion(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="Ask me anything..."
+          disabled={isLoading}
+        />
+        <button
+          onClick={handleSendMessage}
+          disabled={isLoading || !customQuestion.trim()}
+          className="btn-send"
+        >
+          Send
+        </button>
+        <button
+          onClick={handleToggleRecording}
+          className={`btn-record ${isRecording ? 'recording' : ''}`}
+          title={isRecording ? 'Stop recording' : 'Start speaking'}
+          type="button"
+        >
+          {isRecording ? 'Stop' : '🎤'}
         </button>
       </div>
+
+      <div className="chatbot-footer">
+      </div>
     </div>
-
-    <div className="chatbot-messages">
-      {messages.map((msg, index) => (
-        <div key={index} className={`message ${msg.role}`}>
-          {msg.role === 'system' && msg.content === 'recommendation-card' ? (
-            <div className="recommendation-card">
-              <h3>🎯 Your Personalized Recommendation</h3>
-              <div className="food-card">
-                <h4>{msg.food.foodName}</h4>
-                <p className="food-price">${msg.food.price.toFixed(2)}</p>
-                <p className="food-allergies">
-                  {msg.food.allergies && msg.food.allergies.length > 0 ? (
-                    <>Contains: {msg.food.allergies.join(', ')}</>
-                  ) : (
-                    'No common allergens'
-                  )}
-                </p>
-
-                {/* NEW: 5-Star Rating Section */}
-                <div className="rating-section">
-                  <div className="rating-label">
-                    {hasRated ? (
-                      <span className="rating-thank-you">
-                        ✓ Thanks for rating! ({rating}/5)
-                      </span>
-                    ) : (
-                      <span>Rate This Recommendation:</span>
-                    )}
-                  </div>
-
-                  <div className="stars-container">
-                    {[1, 2, 3, 4, 5].map((starNumber) => (
-                      <span
-                        key={starNumber}
-                        className={`star ${hasRated ? 'rated' : 'clickable'}`}
-                        onClick={() => handleStarClick(starNumber)}
-                        onMouseEnter={() => !hasRated && setHoverRating(starNumber)}
-                        onMouseLeave={() => !hasRated && setHoverRating(0)}
-                        style={{
-                          color: getStarColor(starNumber),
-                          cursor: hasRated ? 'default' : 'pointer',
-                          fontSize: '32px',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        ★
-                      </span>
-                    ))}
-                  </div>
-
-                  {ratingMessage && (
-                    <div className={`rating-message ${ratingMessage.includes('✅') ? 'success' : 'error'}`}>
-                      {ratingMessage}
-                    </div>
-                  )}
-                </div>
-
-                <div className="recommendation-actions">
-                  <button onClick={handleOrderFood} className="btn-primary">
-                    Order Now
-                  </button>
-                  <button onClick={handleGetAnotherSuggestion} className="btn-secondary">
-                    Get Another Suggestion
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="message-avatar">
-                {msg.role === 'user' ? '👤' : '🤖'}
-              </div>
-              <div className="message-content">
-                {msg.content}
-              </div>
-            </>
-          )}
-        </div>
-      ))}
-      {isLoading && (
-        <div className="message assistant">
-          <div className="message-avatar">🤖</div>
-          <div className="message-content typing">
-            <span></span><span></span><span></span>
-          </div>
-        </div>
-      )}
-      <div ref={messagesEndRef} />
-    </div>
-
-    <div className="chatbot-custom">
-      <input
-        id="customQuestion"
-        type="text"
-        value={customQuestion}
-        onChange={(e) => setCustomQuestion(e.target.value)}
-        onKeyPress={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendCustomQuestion(); } }}
-        placeholder="Ask me anything..."
-        disabled={isLoading}
-      />
-      <button
-        onClick={handleSendMessage}
-        disabled={isLoading || !customQuestion.trim()}
-        className="btn-send"
-      >
-        Send
-      </button>
-      <button
-        onClick={handleToggleRecording}
-        className={`btn-record ${isRecording ? 'recording' : ''}`}
-        title={isRecording ? 'Stop recording' : 'Start speaking'}
-        type="button"
-      >
-        {isRecording ? 'Stop' : '🎤'}
-      </button>
-    </div>
-
-    <div className="chatbot-footer">
-    </div>
-  </div>
-);
+  );
 };
 
 export default Chatbot;

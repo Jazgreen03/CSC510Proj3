@@ -26,6 +26,9 @@ public class OrderDto {
     /** Timestamp when the order was created. */
     private LocalDateTime createdAt;
 
+    /** List of food IDs in the order (optional, for easier creation) */
+    private List<Long> foodIds;
+
     /**
      * Default constructor for OrderDto.
      */
@@ -134,5 +137,13 @@ public class OrderDto {
 
     public void setCreatedAt(final LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<Long> getFoodIds() {
+        return foodIds;
+    }
+
+    public void setFoodIds(List<Long> foodIds) {
+        this.foodIds = foodIds;
     }
 }

@@ -52,10 +52,16 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderDto createOrder(final OrderDto orderDto) {
         final List<Food> foods = new ArrayList<>();
+        Map<Long, Long> foodCounts;
 
-    // Count how many of each food is in the order
-    Map<Long, Long> foodCounts = orderDto.getFoods().stream()
-        .collect(Collectors.groupingBy(Food::getId, Collectors.counting()));
+        if (orderDto.getFoodIds() != null && !orderDto.getFoodIds().isEmpty()) {
+            foodCounts = orderDto.getFoodIds().stream()
+                .collect(Collectors.groupingBy(id -> id, Collectors.counting()));
+        } else {
+            // Count how many of each food is in the order
+            foodCounts = orderDto.getFoods().stream()
+                .collect(Collectors.groupingBy(Food::getId, Collectors.counting()));
+        }
 
     for (Map.Entry<Long, Long> entry : foodCounts.entrySet()) {
         Long foodId = entry.getKey();

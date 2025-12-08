@@ -33,18 +33,18 @@ const CreateOrder = () => {
 
   // Handle food from chatbot recommendation
   const hasAddedRef = React.useRef(false);
-  
+
   useEffect(() => {
     if (location.state?.addToCart && foods.length > 0 && !hasAddedRef.current) {
       const recommendedFood = location.state.addToCart;
-      
+
       // Check if the food is in stock
       const foodInStock = foods.find(f => f.id === recommendedFood.id);
-      
+
       if (foodInStock) {
         // Mark as added to prevent duplicate additions
         hasAddedRef.current = true;
-        
+
         // Add to cart
         setCart(prev => ({
           ...prev,
@@ -53,18 +53,18 @@ const CreateOrder = () => {
             quantity: (prev[foodInStock.id]?.quantity || 0) + 1
           }
         }));
-        
+
         // Show notification
         setNotification(`✅ ${foodInStock.foodName} has been added to your cart!`);
         setTimeout(() => setNotification(null), 5000);
-        
+
         // Clear the state to prevent re-adding on re-render
         window.history.replaceState({}, document.title);
       } else {
         // Show out of stock notification
         setNotification(`⚠️ Sorry, ${recommendedFood.foodName} is currently out of stock.`);
         setTimeout(() => setNotification(null), 5000);
-        
+
         // Clear the state
         window.history.replaceState({}, document.title);
       }
@@ -122,33 +122,33 @@ const CreateOrder = () => {
 
     setSubmitting(true);
     try {
-      // Prepare order data - send foods with only id field for backend processing
-      const orderFoods = Object.values(cart).flatMap(item => 
-        Array(item.quantity).fill({ id: item.food.id })
+      // Prepare order data - send foodIds as a list of IDs
+      const orderFoodIds = Object.values(cart).flatMap(item =>
+        Array(item.quantity).fill(item.food.id)
       );
 
       const orderData = {
         name: orderName,
-        foods: orderFoods,
+        foodIds: orderFoodIds,
         isFulfilled: false
       };
 
-      console.log('Sending order data:', orderData); // Debug log
+
       await createOrder(orderData);
       alert('Order placed successfully!');
 
-     // UPDATE FRONTEND STOCK AFTER ORDER IS PLACED
-    setFoods(prevFoods =>
-      prevFoods.map(f => {
-        // Count how many of this food were ordered
-        const quantityOrdered = orderFoods.filter(of => of.id === f.id).length;
-        return { ...f, amount: f.amount - quantityOrdered };
-      })
-    );
+      // UPDATE FRONTEND STOCK AFTER ORDER IS PLACED
+      setFoods(prevFoods =>
+        prevFoods.map(f => {
+          // Count how many of this food were ordered
+          const quantityOrdered = orderFoodIds.filter(id => id === f.id).length;
+          return { ...f, amount: f.amount - quantityOrdered };
+        })
+      );
 
-    // Clear cart and order name
-    setCart({});
-    setOrderName('');
+      // Clear cart and order name
+      setCart({});
+      setOrderName('');
 
       // navigate('/orders');
     } catch (error) {
@@ -230,7 +230,7 @@ const CreateOrder = () => {
 
         <div className="cart-section" role="region" aria-labelledby="cart-heading">
           <h2 id="cart-heading">Your Cart</h2>
-          
+
           <div className="order-name-input">
             <label htmlFor="orderName">Order Name:</label>
             <input
@@ -306,9 +306,9 @@ const CreateOrder = () => {
                 <button
                   className="submit-button"
                   onClick={handleSubmitOrder}
-                  disabled={submitting || !orderName.trim()}
-                  aria-label={submitting ? 'Placing order, please wait' : !orderName.trim() ? 'Enter order name to place order' : 'Place order'}
-                  aria-disabled={submitting || !orderName.trim()}
+                  disabled={submitting}
+                  aria-label={submitting ? 'Placing order, please wait' : 'Place order'}
+                  aria-disabled={submitting}
                 >
                   {submitting ? 'Placing Order...' : 'Place Order'}
                 </button>
