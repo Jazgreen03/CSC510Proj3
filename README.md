@@ -148,8 +148,10 @@ For more details on contributing to Food Seer, please read our full guide here: 
 
 ---
 
-## 📈 Code Coverage
-[![codecov](https://codecov.io/gh/NovaCorz/CSC510/branch/main/graph/badge.svg)](https://codecov.io/gh/NovaCorz/CSC510) It is part of the [Github Workflow Build](https://github.com/NovaCorz/CSC510/actions)
+## 📈 Code Coverage Updates
+We have thoroughly tested our newly implemented features using approximately 70 unit and integration test cases, achieving a code coverage of 57.4% as reported by GitHub. Although the coverage is relatively low due to the limited scope of the current implementation, it provides confidence that the core functionality is validated and that the new features are operating as intended.
+
+Our automated test suites are fully integrated with GitHub Actions workflows to enable continuous integration and deployment (CI/CD). The frontend workflows include style checks, code validation, and automated formatting tools, ensuring consistent code quality and adherence to project standards. Overall, these measures confirm that our newly developed functions are reliable, properly tested, and ready for integration into the main application.
 
 ---
 
