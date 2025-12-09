@@ -1,7 +1,7 @@
 # 🍽️ Food Seer - Smart Meal Recommendation System 🍽️
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17850343.svg)](https://doi.org/10.5281/zenodo.17850343)
-[![License](https://img.shields.io/github/license/Jazgreen03/CSC510Proj3?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/github/license/Jazgreen03/CSC510Proj3.svg)](https://github.com/Jazgreen03/CSC510Proj3/blob/main/LICENSE)
 [![GitHub Release](https://img.shields.io/badge/release-V.2.0-blue)](https://github.com/Jazgreen03/CSC510Proj3/releases/tag/V.2.0)
 [![codecov](https://codecov.io/gh/NovaCorz/CSC510/branch/main/graph/badge.svg)](https://codecov.io/gh/NovaCorz/CSC510)
 [![V2 codecov](https://codecov.io/gh/Jazgreen03/CSC510Proj3/branch/dev/graph/badge.svg)](https://codecov.io/gh/Jazgreen03/CSC510Proj3/tree/dev)
