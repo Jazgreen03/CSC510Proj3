@@ -5,9 +5,6 @@
 [![GitHub Release](https://img.shields.io/badge/release-V.2.0-blue)](https://github.com/Jazgreen03/CSC510Proj3/releases/tag/V.2.0)
 [![codecov](https://codecov.io/gh/NovaCorz/CSC510/branch/main/graph/badge.svg)](https://codecov.io/gh/NovaCorz/CSC510)
 [![V2 codecov](https://codecov.io/gh/Jazgreen03/CSC510Proj3/branch/dev/graph/badge.svg)](https://codecov.io/gh/Jazgreen03/CSC510Proj3/tree/dev)
-![GitHub issues](https://img.shields.io/github/issues/Jazgreen03/CSC510Proj3)
-![GitHub open pull requests](https://img.shields.io/github/issues-pr/Jazgreen03/CSC510Proj3)
-![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/Jazgreen03/CSC510Proj3)
 
 ---
 
