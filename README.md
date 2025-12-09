@@ -5,8 +5,6 @@
 [![GitHub Release](https://img.shields.io/badge/release-V.2.0-blue)](https://github.com/Jazgreen03/CSC510Proj3/releases/tag/V.2.0)
 [![codecov](https://codecov.io/gh/NovaCorz/CSC510/branch/main/graph/badge.svg)](https://codecov.io/gh/NovaCorz/CSC510)
 [![V2 codecov](https://codecov.io/gh/Jazgreen03/CSC510Proj3/branch/dev/graph/badge.svg)](https://codecov.io/gh/Jazgreen03/CSC510Proj3/tree/dev)
-
-
 ![GitHub issues](https://img.shields.io/github/issues/Jazgreen03/CSC510Proj3)
 ![GitHub open pull requests](https://img.shields.io/github/issues-pr/Jazgreen03/CSC510Proj3)
 ![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/Jazgreen03/CSC510Proj3)
@@ -31,14 +29,6 @@ We built Food Seer to:
 
 ♿ Ensure accessibility for users with disabilities, following ADA guidelines
 
-Food Seer bridges AI-driven personalization with restaurant efficiency — improving both customer experience and backend operations.
-We built Food Seer to:
-
-- ✅ Reduce menu fatigue and decision stress  
-- 🤖 Provide personalized suggestions via **AI chat**  
-- ❓ Offer a quiz-based food recommendation system  
-- 🛒 Streamline ordering into a simple “choose and order” flow  
-- 🧾 Empower staff with inventory, user, and order management tools  
 
 Food Seer bridges **AI-driven personalization** with **restaurant efficiency** — improving both customer experience and backend operations.
 ---
@@ -66,7 +56,28 @@ Food Seer transforms meal choices from a chore into a simple, enjoyable interact
 - **Ollama-powered AI chatbot** for conversational food suggestions  
 - **Clean, tab-based UI** for seamless navigation between ordering, recommendations, and account features  
 - **Back-end systems** for inventory, ordering, session management, and user accounts  
-- **Automated tests** with **85%+ coverage** across frontend & backend  
+- **Automated tests** with **85%+ coverage** across frontend & backend
+
+# For Project 3: Building on our existing cool features, we wanted to implement and enhance the user experience with these exciting new additions!
+
+### New Features
+- **Chatbot History** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Retains user history and previous recommendations to provide truly personalized suggestions over time.  
+- **Recommendation Feedback** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Users can rate and review recommendations, enabling continuous improvement.  
+- **Analytics Dashboard** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Provides insights into customer choices and ordering trends to support smarter business decisions.  
+- **Enhanced Chatbot Interaction** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Adds speech-to-text and text-to-speech functionality, allowing natural conversation with the chatbot.  
+- **Accessibility Compliance** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Implements ADA guidelines to ensure usability for users with disabilities.  
+- **Full Meal Recommendations** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Suggests complete meals tailored to dietary restrictions and health goals.  
+- **Flexible Chatbot Structure** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Updates the older rigid 3-question format for a more dynamic user experience.  
+- **Updated Quiz System** ![New](https://img.shields.io/badge/New-brightgreen)  
+  Redesigned to be more sensitive to allergens entered at the start.  
+
 
 ---
 
@@ -149,7 +160,7 @@ For more details on contributing to Food Seer, please read our full guide here: 
 ---
 
 ## 📈 Code Coverage Updates
-We have thoroughly tested our newly implemented features using approximately 70 unit and integration test cases, achieving a code coverage of 57.4% as reported by GitHub. Although the coverage is relatively low due to the limited scope of the current implementation, it provides confidence that the core functionality is validated and that the new features are operating as intended.
+We have thoroughly tested our newly implemented features using approximately 70 unit and integration test cases, achieving a code coverage for Backend of 57.4% as reported by GitHub. Although the coverage is relatively low due to the limited scope of the current implementation, it provides confidence that the core functionality is validated and that the new features are operating as intended.
 
 Our automated test suites are fully integrated with GitHub Actions workflows to enable continuous integration and deployment (CI/CD). The frontend workflows include style checks, code validation, and automated formatting tools, ensuring consistent code quality and adherence to project standards. Overall, these measures confirm that our newly developed functions are reliable, properly tested, and ready for integration into the main application.
 
